@@ -13,4 +13,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
+
+keycloak:
+  adapter-url: http://localhost:8884

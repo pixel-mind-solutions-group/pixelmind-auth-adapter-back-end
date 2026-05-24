@@ -31,23 +31,24 @@ public class UserServiceImpl implements UserService {
     public CommonResponseDTO createOrModify(UserRequestDTO userRequest) {
 
         User user = new User();
-        AuditData auditData = new AuditData();
 
         if (userRequest.getId() != null) {
             user = userRepository.findById(UUID.fromString(userRequest.getId()))
                     .orElseThrow(() -> new BaseException(HttpStatus.NOT_FOUND.value(), "User not found")
                     );
-            auditData.setUpdatedBy("admin");
-            auditData.setUpdatedOn(LocalDateTime.now());
+            user.getAuditData().setUpdatedBy("admin");
+            user.getAuditData().setUpdatedOn(LocalDateTime.now());
 
         } else {
+            AuditData auditData = new AuditData();
+
             user.setFailCount((short) 0);
             user.setUserName(userRequest.getUsername());
+            user.setAuditData(auditData);
             auditData.setCreatedBy("admin");
             auditData.setCreatedOn(LocalDateTime.now());
         }
 
-        user.setAuditData(auditData);
         userRepository.save(userMapper.toEntity(user, userRequest));
 
         return new CommonResponseDTO(

@@ -25,7 +25,7 @@ public class UserController {
     @GetMapping(value = "/search")
     public ResponseEntity<CommonResponseDTO> search(@RequestParam(value = "searchParam") String searchParam,
                                                     @RequestParam(value = "page", required = false, defaultValue = "0") Integer page,
-                                                    @RequestParam(value = "size", required = false, defaultValue = "10") Integer size) {
+                                                    @RequestParam(value = "size", required = false, defaultValue = "5") Integer size) {
         return ResponseEntity.ok(userService.search(searchParam, page, size));
     }
 }
