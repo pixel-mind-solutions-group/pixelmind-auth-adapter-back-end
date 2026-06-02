@@ -1,6 +1,6 @@
 import logging
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 from schemas.common_response import CommonResponseDTO
 from schemas.user import user_request
@@ -45,3 +45,22 @@ async def search_users(
     logger.info("user_router => search_users function accessed: %s", query)
 
     return get_user_service().search_users(db, page, size, query)
+
+
+@router.get(
+    "/get",
+    response_model=CommonResponseDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Get a user by ID",
+    description="Retrieve a single user by its ID via request parameter.",
+)
+async def get_user_by_id(
+    user_id: int = Query(..., description="The ID of the user to retrieve"),
+    db: Session = Depends(get_db),
+) -> CommonResponseDTO:
+
+    logger.info("user_router => get_user_by_id function accessed: %s", user_id)
+
+    return get_user_service().get_user_by_id(db, user_id)
+
+

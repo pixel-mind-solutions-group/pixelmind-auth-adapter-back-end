@@ -4,7 +4,11 @@ import logging
 from fastapi import status
 from sqlalchemy import null
 from sqlalchemy.orm import Session
-from exceptions.custom_exceptions import AppException, BadRequestException
+from exceptions.custom_exceptions import (
+    AppException,
+    BadRequestException,
+    NotFoundException,
+)
 
 # schema model imports
 from schemas.common_response import CommonResponseDTO
@@ -18,8 +22,6 @@ import mapper.user.user_mapper as user_mapper
 
 # model imports
 from models.user.user import User
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -79,12 +81,30 @@ class UserService:
             data=user_mapper.to_dto(user_entity),
         )
 
+    def get_user_by_id(self, db: Session, user_id: int):
+        logger.info("UserService => get_user_by_id function accessed: %s", user_id)
+
+        user_entity = self.user_repository.find_by_id(db, user_id)
+
+        if not user_entity:
+            raise NotFoundException(f"User with ID {user_id} not found")
+
+        logger.info("UserService => get_user_by_id function ended: %s", user_id)
+
+        return CommonResponseDTO(
+            status=status.HTTP_200_OK,
+            message="User retrieved successfully",
+            data=user_mapper.to_dto(user_entity),
+        )
+
     def search_users(self, db: Session, page: int, size: int, query: str):
 
         logger.info("UserService => search_users function accessed: %s", query)
 
         try:
-            users, total_pages, total = self.user_repository.search(db, page, size, query)
+            users, total_pages, total = self.user_repository.search(
+                db, page, size, query
+            )
 
             user_dtos = user_mapper.to_dto_list(users)
 
