@@ -119,31 +119,20 @@ class UserService:
 
         logger.info("UserService => search_users function accessed: %s", query)
 
-        try:
-            users, total_pages, total = self.user_repository.search(
-                db, page, size, query
-            )
+        users, total_pages, total = self.user_repository.search(db, page, size, query)
 
-            user_dtos = user_mapper.to_dto_list(users)
+        user_dtos = user_mapper.to_dto_list(users)
 
-            logger.info("UserService => search_users function ended: %s", query)
+        logger.info("UserService => search_users function ended: %s", query)
 
-            return CommonResponseDTO(
-                status=status.HTTP_200_OK,
-                message="Users retrieved response",
-                data={
-                    "users": user_dtos,
-                    "total": total,
-                    "page": page,
-                    "size": size,
-                    "totalPages": total_pages,
-                },
-            )
-
-        except Exception as e:
-            logger.error("Error while searching users: %s", e)
-
-            raise AppException(
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-                "Failed to search users, Please contact support",
-            )
+        return CommonResponseDTO(
+            status=status.HTTP_200_OK,
+            message="Users retrieved response",
+            data={
+                "users": user_dtos,
+                "total": total,
+                "page": page,
+                "size": size,
+                "totalPages": total_pages,
+            },
+        )
