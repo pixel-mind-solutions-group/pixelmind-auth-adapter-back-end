@@ -14,6 +14,7 @@ def to_dto(user: User) -> UserResponseDTO:
     dto.active = user.active
     dto.emailVerified = user.emailVerified
     dto.failCount = user.failCount
+    dto.createdAt = user.createdAt.date().isoformat() if user.createdAt else None
     return dto
 
 

@@ -18,3 +18,6 @@ class UserResponseDTO(BaseModel):
     failCount: Optional[int] = Field(
         None, description="The number of failed login attempts for the user"
     )
+    createdAt: Optional[str] = Field(
+        None, description="The timestamp when the user was created"
+    )
