@@ -64,3 +64,18 @@ async def get_user_by_id(
     return get_user_service().get_user_by_id(db, user_id)
 
 
+@router.delete(
+    "/delete",
+    response_model=CommonResponseDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Delete a user by ID",
+    description="Delete a single user by its ID via request parameter.",
+)
+async def delete_user_by_id(
+    user_id: int = Query(..., description="The ID of the user to delete"),
+    db: Session = Depends(get_db),
+) -> CommonResponseDTO:
+
+    logger.info("user_router => delete_user_by_id function accessed: %s", user_id)
+
+    return get_user_service().delete_user_by_id(db, user_id)

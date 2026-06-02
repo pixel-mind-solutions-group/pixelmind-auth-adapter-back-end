@@ -35,3 +35,8 @@ class UserRepository:
 
     def find_by_id(self, db, user_id):
         return db.query(User).filter(User.id == user_id).first()
+
+    def delete(self, db, user):
+        db.delete(user)
+        db.commit()
+        return True

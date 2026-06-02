@@ -97,6 +97,24 @@ class UserService:
             data=user_mapper.to_dto(user_entity),
         )
 
+    def delete_user_by_id(self, db: Session, user_id: int):
+        logger.info("UserService => delete_user_by_id function accessed: %s", user_id)
+
+        user_entity = self.user_repository.find_by_id(db, user_id)
+
+        if not user_entity:
+            raise NotFoundException(f"User with ID {user_id} not found")
+
+        self.user_repository.delete(db, user_entity)
+
+        logger.info("UserService => delete_user_by_id function ended: %s", user_id)
+
+        return CommonResponseDTO(
+            status=status.HTTP_200_OK,
+            message="User deleted successfully",
+            data=None,
+        )
+
     def search_users(self, db: Session, page: int, size: int, query: str):
 
         logger.info("UserService => search_users function accessed: %s", query)
