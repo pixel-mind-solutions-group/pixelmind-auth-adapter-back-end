@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from core.database import Base, engine
 from exceptions.handlers import register_exception_handlers
 from routers.user.user_router import router as user_router
+from routers.application.application_router import router as application_router
 import configs.logging_config  # logging enabled
 from configs.cors_config import register_cors  # CORS enabled
 
@@ -17,6 +18,7 @@ app = FastAPI(
 Base.metadata.create_all(bind=engine)
 
 app.include_router(user_router)
+app.include_router(application_router)
 
 register_exception_handlers(app)
 
