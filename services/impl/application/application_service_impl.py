@@ -15,16 +15,30 @@ class ApplicationServiceImpl(ApplicationService):
     def __init__(self):
         self.application_repository = ApplicationRepository()
 
-    def get_all_applications(self, db: Session) -> CommonResponseDTO:
-        logger.info("ApplicationServiceImpl => get_all_applications function accessed")
+    def search_applications(
+        self, db: Session, page: int, size: int, query: str
+    ) -> CommonResponseDTO:
+        logger.info(
+            "ApplicationServiceImpl => search_applications function accessed: %s", query
+        )
 
-        applications = self.application_repository.get_all(db)
+        applications, total_pages, total = self.application_repository.search(
+            db, page, size, query
+        )
         application_dtos = application_mapper.to_dto_list(applications)
 
-        logger.info("ApplicationServiceImpl => get_all_applications function ended")
+        logger.info(
+            "ApplicationServiceImpl => search_applications function ended: %s", query
+        )
 
         return CommonResponseDTO(
             status=status.HTTP_200_OK,
             message="Applications retrieved successfully",
-            data={"applications": application_dtos, "total": len(application_dtos)},
+            data={
+                "applications": application_dtos,
+                "total": total,
+                "page": page,
+                "size": size,
+                "totalPages": total_pages,
+            },
         )

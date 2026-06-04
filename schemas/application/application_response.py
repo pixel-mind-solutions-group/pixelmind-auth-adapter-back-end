@@ -11,3 +11,4 @@ class ApplicationResponseDTO(BaseModel):
         None, description="Indicates whether the application is active"
     )
     uuid: Optional[str] = Field(None, description="The UUID of the application")
+    realm: Optional[str] = Field(None, description="The realm of the application")

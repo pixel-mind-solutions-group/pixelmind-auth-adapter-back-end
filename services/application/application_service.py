@@ -6,5 +6,7 @@ from schemas.common_response import CommonResponseDTO
 class ApplicationService(ABC):
 
     @abstractmethod
-    def get_all_applications(self, db: Session) -> CommonResponseDTO:
+    def search_applications(
+        self, db: Session, page: int, size: int, query: str
+    ) -> CommonResponseDTO:
         pass

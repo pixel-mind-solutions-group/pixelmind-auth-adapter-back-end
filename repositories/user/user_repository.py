@@ -25,7 +25,7 @@ class UserRepository:
             )
         )
 
-        total = base_query.with_entities(func.count(User.id)).scalar()
+        total = base_query.with_entities(func.count(User.id)).scalar() or 0
 
         users = base_query.offset(page * size).limit(size).all()
 

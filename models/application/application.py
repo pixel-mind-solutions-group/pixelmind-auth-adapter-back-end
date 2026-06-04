@@ -12,3 +12,5 @@ class Application(Base):
     active = Column("active", Boolean, nullable=False)
 
     uuid = Column("uuid", String, nullable=False, unique=True)
+
+    realm = Column("realm", String, nullable=False)

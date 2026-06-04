@@ -8,6 +8,7 @@ def to_dto(application: Application) -> ApplicationResponseDTO:
     dto.applicationName = application.applicationName
     dto.active = application.active
     dto.uuid = application.uuid
+    dto.realm = application.realm
     return dto
 
 
