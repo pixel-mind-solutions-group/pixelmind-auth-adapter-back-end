@@ -24,7 +24,9 @@ class UserServiceImpl(UserService):
     def __init__(self):
         self.user_repository = UserRepository()
 
-    def create_or_update_user(self, db: Session, user_data: UserRequestDTO) -> CommonResponseDTO:
+    def create_or_update_user(
+        self, db: Session, user_data: UserRequestDTO
+    ) -> CommonResponseDTO:
         logger.info(
             "UserServiceImpl => create_or_update_user function accessed: %s", user_data
         )
@@ -88,7 +90,9 @@ class UserServiceImpl(UserService):
         )
 
     def delete_user_by_id(self, db: Session, user_id: int) -> CommonResponseDTO:
-        logger.info("UserServiceImpl => delete_user_by_id function accessed: %s", user_id)
+        logger.info(
+            "UserServiceImpl => delete_user_by_id function accessed: %s", user_id
+        )
 
         user_entity = self.user_repository.find_by_id(db, user_id)
 
@@ -105,10 +109,15 @@ class UserServiceImpl(UserService):
             data=None,
         )
 
-    def search_users(self, db: Session, page: int, size: int, query: str) -> CommonResponseDTO:
+    def search_users(
+        self, db: Session, page: int, size: int, query: str, active: bool = None
+    ) -> CommonResponseDTO:
+
         logger.info("UserServiceImpl => search_users function accessed: %s", query)
 
-        users, total_pages, total = self.user_repository.search(db, page, size, query)
+        users, total_pages, total = self.user_repository.search(
+            db, page, size, query, active
+        )
         user_dtos = user_mapper.to_dto_list(users)
 
         logger.info("UserServiceImpl => search_users function ended: %s", query)

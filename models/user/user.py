@@ -14,7 +14,7 @@ class User(Base):
 
     username = Column("username", String, nullable=False)
 
-    active = Column("active", Boolean, nullable=False)
+    active = Column("active", Boolean, nullable=False, default=False)
 
     emailVerified = Column("email_verified", Boolean, nullable=False)
 

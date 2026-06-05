@@ -13,7 +13,7 @@ class UserRepository:
         db.refresh(user)
         return user
 
-    def search(self, db, page: int, size: int, query: str):
+    def search(self, db, page: int, size: int, query: str, active: bool = None):
         pattern = f"%{query}%" if query else "%"
 
         base_query = db.query(User).filter(
@@ -24,6 +24,9 @@ class UserRepository:
                 User.username.ilike(pattern),
             )
         )
+
+        if active is not None:
+            base_query = base_query.filter(User.active == active)
 
         total = base_query.with_entities(func.count(User.id)).scalar() or 0
 

@@ -39,12 +39,16 @@ async def register_modify_user(
     description="This endpoint allows you to search for a user list based on provided criteria.",
 )
 async def search_users(
-    page: int = 0, size: int = 5, query: str = None, db: Session = Depends(get_db)
+    page: int = 0,
+    size: int = 5,
+    query: str = None,
+    active: bool = None,
+    db: Session = Depends(get_db),
 ) -> CommonResponseDTO:
 
     logger.info("user_router => search_users function accessed: %s", query)
 
-    return get_user_service().search_users(db, page, size, query)
+    return get_user_service().search_users(db, page, size, query, active)
 
 
 @router.get(

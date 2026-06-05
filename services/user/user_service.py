@@ -7,7 +7,9 @@ from schemas.user.user_request import UserRequestDTO
 class UserService(ABC):
 
     @abstractmethod
-    def create_or_update_user(self, db: Session, user_data: UserRequestDTO) -> CommonResponseDTO:
+    def create_or_update_user(
+        self, db: Session, user_data: UserRequestDTO
+    ) -> CommonResponseDTO:
         pass
 
     @abstractmethod
@@ -19,5 +21,7 @@ class UserService(ABC):
         pass
 
     @abstractmethod
-    def search_users(self, db: Session, page: int, size: int, query: str) -> CommonResponseDTO:
+    def search_users(
+        self, db: Session, page: int, size: int, query: str, active: bool = None
+    ) -> CommonResponseDTO:
         pass
