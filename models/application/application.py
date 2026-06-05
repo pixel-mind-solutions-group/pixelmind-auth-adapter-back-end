@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
 from core.database import Base
 
 
@@ -7,10 +8,12 @@ class Application(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    applicationName = Column("application_name", String, nullable=False)
-
-    active = Column("active", Boolean, nullable=False)
+    clientId = Column("client_id", String, nullable=False, unique=True)
 
     uuid = Column("uuid", String, nullable=False, unique=True)
 
-    realm = Column("realm", String, nullable=False)
+    active = Column("active", Boolean, nullable=False)
+
+    realmId = Column("realm_id", Integer, ForeignKey("realms.id"), nullable=False)
+
+    realm = relationship("Realm", back_populates="applications")
