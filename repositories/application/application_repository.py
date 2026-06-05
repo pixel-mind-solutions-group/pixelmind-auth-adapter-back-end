@@ -35,7 +35,7 @@ class ApplicationRepository:
             pattern = f"%{query}%"
             base_query = base_query.join(Realm, Application.realmId == Realm.id).filter(
                 or_(
-                    Application.applicationName.ilike(pattern),
+                    Application.clientId.ilike(pattern),
                     Application.uuid.ilike(pattern),
                     Realm.realm.ilike(pattern),
                 )
