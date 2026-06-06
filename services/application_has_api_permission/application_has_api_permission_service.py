@@ -17,3 +17,13 @@ class ApplicationHasApiPermissionService(ABC):
     @abstractmethod
     def delete_profile_by_id(self, db: Session, mapping_id: int) -> CommonResponseDTO:
         pass
+
+    @abstractmethod
+    def search_assigned_permissions(
+        self,
+        db: Session,
+        realm_id: int = None,
+        application_id: int = None,
+        api_permission_name: str = None,
+    ) -> CommonResponseDTO:
+        pass

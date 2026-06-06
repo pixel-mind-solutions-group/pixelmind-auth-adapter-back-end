@@ -62,10 +62,20 @@ async def search_permissions(
     description="Retrieve list of all active permissions.",
 )
 async def get_all_active_permissions(
+    realm_id: int = Query(..., description="The realm ID"),
+    application_id: int = Query(..., description="The application ID"),
+    api_permission_name: str = Query(None, description="Optional API permission name to retrieve"),
     db: Session = Depends(get_db),
 ) -> CommonResponseDTO:
-    logger.info("api_permission_router => get_all_active_permissions function accessed")
-    return get_api_permission_service().get_all_active_permissions(db)
+    logger.info(
+        "api_permission_router => get_all_active_permissions function accessed: realm_id=%s, application_id=%s, api_permission_name=%s",
+        realm_id,
+        application_id,
+        api_permission_name,
+    )
+    return get_api_permission_service().get_all_active_permissions(
+        db, realm_id, application_id, api_permission_name
+    )
 
 
 @router.get(

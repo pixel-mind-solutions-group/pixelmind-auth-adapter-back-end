@@ -44,13 +44,27 @@ class ApiPermissionRepository:
     def find_by_id(self, db, perm_id: int):
         return db.query(ApiPermission).filter(ApiPermission.id == perm_id).first()
 
-    def get_all_active_permissions(self, db):
-        return (
-            db.query(ApiPermission)
-            .filter(ApiPermission.active == True)
-            .order_by(ApiPermission.id.desc())
-            .all()
+    def get_all_active_permissions(
+        self, db, realm_id: int, application_id: int, api_permission_name: str = None
+    ):
+        from models.application_has_api_permission.application_has_api_permission import (
+            ApplicationHasApiPermission,
         )
+
+        assigned_query = db.query(ApplicationHasApiPermission.apiPermissionId).filter(
+            ApplicationHasApiPermission.realmId == realm_id,
+            ApplicationHasApiPermission.applicationId == application_id,
+        )
+
+        query = db.query(ApiPermission).filter(
+            ApiPermission.active == True,
+            ~ApiPermission.id.in_(assigned_query),
+        )
+
+        if api_permission_name:
+            query = query.filter(ApiPermission.apiPermissionName == api_permission_name)
+
+        return query.order_by(ApiPermission.id.desc()).all()
 
     def find_by_name(self, db, name: str):
         return (

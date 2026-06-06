@@ -32,5 +32,11 @@ class ApiPermissionService(ABC):
         pass
 
     @abstractmethod
-    def get_all_active_permissions(self, db: Session) -> CommonResponseDTO:
+    def get_all_active_permissions(
+        self,
+        db: Session,
+        realm_id: int,
+        application_id: int,
+        api_permission_name: str = None,
+    ) -> CommonResponseDTO:
         pass

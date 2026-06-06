@@ -132,9 +132,22 @@ class ApiPermissionServiceImpl(ApiPermissionService):
             },
         )
 
-    def get_all_active_permissions(self, db: Session) -> CommonResponseDTO:
-        logger.info("ApiPermissionServiceImpl => get_all_active_permissions")
-        perms = self.repository.get_all_active_permissions(db)
+    def get_all_active_permissions(
+        self,
+        db: Session,
+        realm_id: int,
+        application_id: int,
+        api_permission_name: str = None,
+    ) -> CommonResponseDTO:
+        logger.info(
+            "ApiPermissionServiceImpl => get_all_active_permissions: realm_id=%s, application_id=%s, api_permission_name=%s",
+            realm_id,
+            application_id,
+            api_permission_name,
+        )
+        perms = self.repository.get_all_active_permissions(
+            db, realm_id, application_id, api_permission_name
+        )
         dtos = api_permission_mapper.to_dto_list(perms)
 
         return CommonResponseDTO(

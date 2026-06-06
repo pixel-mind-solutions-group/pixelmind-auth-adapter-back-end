@@ -55,3 +55,29 @@ async def delete_profile_by_id(
     return get_application_has_api_permission_service().delete_profile_by_id(
         db, application_has_api_permission_id
     )
+
+
+@router.get(
+    "/search",
+    response_model=CommonResponseDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Search assigned API permissions",
+    description="Retrieve list of assigned API permissions with optional filters.",
+)
+async def search_assigned_permissions(
+    realm_id: int = Query(None, description="Optional realm ID to filter"),
+    application_id: int = Query(None, description="Optional application ID to filter"),
+    api_permission_name: str = Query(
+        None, description="Optional API permission name to filter"
+    ),
+    db: Session = Depends(get_db),
+) -> CommonResponseDTO:
+    logger.info(
+        "application_has_api_permission_router => search_assigned_permissions function accessed: realm_id=%s, application_id=%s, api_permission_name=%s",
+        realm_id,
+        application_id,
+        api_permission_name,
+    )
+    return get_application_has_api_permission_service().search_assigned_permissions(
+        db, realm_id, application_id, api_permission_name
+    )

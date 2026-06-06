@@ -44,7 +44,11 @@ class ApplicationHasApiPermissionServiceImpl(ApplicationHasApiPermissionService)
             raise NotFoundException(f"Realm with ID {req_data.realmId} not found")
 
         # 2. Verify Application exists
-        app = db.query(Application).filter(Application.id == req_data.applicationId).first()
+        app = (
+            db.query(Application)
+            .filter(Application.id == req_data.applicationId)
+            .first()
+        )
         if not app:
             raise NotFoundException(
                 f"Application with ID {req_data.applicationId} not found"
@@ -52,31 +56,26 @@ class ApplicationHasApiPermissionServiceImpl(ApplicationHasApiPermissionService)
 
         # 3. Verify all API Permissions exist
         for perm_id in req_data.apiPermissionIdList:
-            perm = (
-                db.query(ApiPermission)
-                .filter(ApiPermission.id == perm_id)
-                .first()
-            )
+            perm = db.query(ApiPermission).filter(ApiPermission.id == perm_id).first()
             if not perm:
-                raise NotFoundException(
-                    f"API Permission with ID {perm_id} not found"
-                )
+                raise NotFoundException(f"API Permission with ID {perm_id} not found")
 
-        # 4. Delete existing mappings for the given realm and application
-        db.query(ApplicationHasApiPermission).filter(
-            ApplicationHasApiPermission.realmId == req_data.realmId,
-            ApplicationHasApiPermission.applicationId == req_data.applicationId,
-        ).delete(synchronize_session=False)
-        db.commit()
-
-        # 5. Create and save new mappings
+        # 4. Create and save new mappings without deleting previously saved records
         created_entities = []
         for perm_id in req_data.apiPermissionIdList:
-            entity = mapper.to_model(req_data.realmId, req_data.applicationId, perm_id)
-            entity = self.repository.create(db, entity)
-            # Ensure relationships are loaded
-            db.refresh(entity)
-            created_entities.append(entity)
+            existing = self.repository.find_by_realm_app_and_permission(
+                db, req_data.realmId, req_data.applicationId, perm_id
+            )
+            if existing:
+                created_entities.append(existing)
+            else:
+                entity = mapper.to_model(
+                    req_data.realmId, req_data.applicationId, perm_id
+                )
+                entity = self.repository.create(db, entity)
+                # Ensure relationships are loaded
+                db.refresh(entity)
+                created_entities.append(entity)
 
         return CommonResponseDTO(
             status=status.HTTP_201_CREATED,
@@ -102,4 +101,27 @@ class ApplicationHasApiPermissionServiceImpl(ApplicationHasApiPermissionService)
             status=status.HTTP_200_OK,
             message="Application API Permission mapping deleted successfully",
             data=None,
+        )
+
+    def search_assigned_permissions(
+        self,
+        db: Session,
+        realm_id: int = None,
+        application_id: int = None,
+        api_permission_name: str = None,
+    ) -> CommonResponseDTO:
+        logger.info(
+            "ApplicationHasApiPermissionServiceImpl => search_assigned_permissions: realm_id=%s, application_id=%s, api_permission_name=%s",
+            realm_id,
+            application_id,
+            api_permission_name,
+        )
+        mappings = self.repository.search_assigned(
+            db, realm_id, application_id, api_permission_name
+        )
+        dtos = mapper.to_dto_list(mappings)
+        return CommonResponseDTO(
+            status=status.HTTP_200_OK,
+            message="Assigned API permissions retrieved successfully",
+            data=dtos,
         )
