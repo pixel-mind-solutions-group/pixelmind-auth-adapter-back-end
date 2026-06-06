@@ -25,6 +25,7 @@ from models.user.user import User
 from models.realm.realm import Realm
 from models.application.application import Application
 from models.realms_has_applications.realms_has_applications import RealmsHasApplications
+from models.module.module import Module
 
 target_metadata = Base.metadata
 

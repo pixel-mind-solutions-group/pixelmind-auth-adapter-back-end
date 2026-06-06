@@ -14,3 +14,4 @@ class Application(Base):
     active = Column("active", Boolean, nullable=False)
 
     realms = relationship("RealmsHasApplications", back_populates="application")
+    modules = relationship("Module", back_populates="application")

@@ -1,5 +1,6 @@
 from schemas.application.application_response import ApplicationResponseDTO
 from models.realms_has_applications.realms_has_applications import RealmsHasApplications
+from models.application.application import Application
 from mapper.realm.realm_mapper import to_dto as to_realm_dto
 
 
@@ -20,3 +21,13 @@ def to_dto(mapping: RealmsHasApplications) -> ApplicationResponseDTO:
 
 def to_dto_list(mappings) -> list[ApplicationResponseDTO]:
     return [to_dto(mapping) for mapping in mappings]
+
+
+def to_application_dto(application: Application) -> ApplicationResponseDTO:
+    if not application:
+        return None
+    dto = ApplicationResponseDTO()
+    dto.id = application.id
+    dto.clientId = application.clientId
+    dto.active = application.active
+    return dto

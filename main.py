@@ -6,6 +6,7 @@ from exceptions.handlers import register_exception_handlers
 from routers.user.user_router import router as user_router
 from routers.application.application_router import router as application_router
 from routers.realm.realm_router import router as realm_router
+from routers.module.module_router import router as module_router
 from utils.migration import run_auto_migrations
 import configs.logging_config  # logging enabled
 from configs.cors_config import register_cors  # CORS enabled
@@ -22,6 +23,7 @@ run_auto_migrations()
 app.include_router(user_router)
 app.include_router(application_router)
 app.include_router(realm_router)
+app.include_router(module_router)
 
 register_exception_handlers(app)
 
