@@ -27,6 +27,7 @@ from models.application.application import Application
 from models.realms_has_applications.realms_has_applications import RealmsHasApplications
 from models.module.module import Module
 from models.api_permission.api_permission import ApiPermission
+from models.application_has_api_permission.application_has_api_permission import ApplicationHasApiPermission
 
 target_metadata = Base.metadata
 
