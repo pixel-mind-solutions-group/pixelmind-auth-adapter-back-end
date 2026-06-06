@@ -1,3 +1,4 @@
+import uuid
 from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy.orm import relationship
 from core.database import Base
@@ -12,8 +13,10 @@ class Realm(Base):
 
     internal_uuid = Column("internal_uuid", String, nullable=False, unique=True)
 
-    uuid = Column("uuid", String, nullable=False, unique=True)
+    uuid = Column(
+        "uuid", String, nullable=False, unique=True, default=lambda: str(uuid.uuid4())
+    )
 
     active = Column("active", Boolean, nullable=False, default=True)
 
-    applications = relationship("Application", back_populates="realm")
+    applications = relationship("RealmsHasApplications", back_populates="realm")

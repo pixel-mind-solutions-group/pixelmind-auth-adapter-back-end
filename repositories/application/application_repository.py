@@ -2,15 +2,17 @@ import math
 from sqlalchemy import func, or_
 from models.application.application import Application
 from models.realm.realm import Realm
+from models.realms_has_applications.realms_has_applications import RealmsHasApplications
 
 
 class ApplicationRepository:
 
     def get_all_active_applications(self, db):
         return (
-            db.query(Application)
+            db.query(RealmsHasApplications)
+            .join(Application, RealmsHasApplications.application_id == Application.id)
             .filter(Application.active == True)
-            .order_by(Application.id.desc())
+            .order_by(RealmsHasApplications.id.desc())
             .all()
         )
 
@@ -23,25 +25,29 @@ class ApplicationRepository:
         realm_id: int = None,
         application_id: int = None,
     ):
-        base_query = db.query(Application)
+        base_query = db.query(RealmsHasApplications).join(
+            Application, RealmsHasApplications.application_id == Application.id
+        ).join(
+            Realm, RealmsHasApplications.realm_id == Realm.id
+        )
 
         if realm_id is not None and realm_id != -1:
-            base_query = base_query.filter(Application.realmId == realm_id)
+            base_query = base_query.filter(RealmsHasApplications.realm_id == realm_id)
 
         if application_id is not None and application_id != -1:
-            base_query = base_query.filter(Application.id == application_id)
+            base_query = base_query.filter(RealmsHasApplications.application_id == application_id)
 
         if query:
             pattern = f"%{query}%"
-            base_query = base_query.join(Realm, Application.realmId == Realm.id).filter(
+            base_query = base_query.filter(
                 or_(
                     Application.clientId.ilike(pattern),
-                    Application.uuid.ilike(pattern),
+                    RealmsHasApplications.uuid.ilike(pattern),
                     Realm.realm.ilike(pattern),
                 )
             )
 
-        total = base_query.with_entities(func.count(Application.id)).scalar() or 0
+        total = base_query.with_entities(func.count(RealmsHasApplications.id)).scalar() or 0
 
         applications = base_query.offset(page * size).limit(size).all()
 
