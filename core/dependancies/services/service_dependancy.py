@@ -6,6 +6,16 @@ from services.api_permission.api_permission_service import ApiPermissionService
 from services.application_has_api_permission.application_has_api_permission_service import (
     ApplicationHasApiPermissionService,
 )
+from services.ui_permission.ui_permission_service import UiPermissionService
+from services.application_has_ui_permission.application_has_ui_permission_service import (
+    ApplicationHasUiPermissionService,
+)
+from services.module_has_api_permission.module_has_api_permission_service import (
+    ModuleHasApiPermissionService,
+)
+from services.module_has_ui_permission.module_has_ui_permission_service import (
+    ModuleHasUiPermissionService,
+)
 from services.impl.user.user_service_impl import UserServiceImpl
 from services.impl.application.application_service_impl import ApplicationServiceImpl
 from services.impl.realm.realm_service_impl import RealmServiceImpl
@@ -13,6 +23,16 @@ from services.impl.module.module_service_impl import ModuleServiceImpl
 from services.impl.api_permission.api_permission_service_impl import ApiPermissionServiceImpl
 from services.impl.application_has_api_permission.application_has_api_permission_service_impl import (
     ApplicationHasApiPermissionServiceImpl,
+)
+from services.impl.ui_permission.ui_permission_service_impl import UiPermissionServiceImpl
+from services.impl.application_has_ui_permission.application_has_ui_permission_service_impl import (
+    ApplicationHasUiPermissionServiceImpl,
+)
+from services.impl.module_has_api_permission.module_has_api_permission_service_impl import (
+    ModuleHasApiPermissionServiceImpl,
+)
+from services.impl.module_has_ui_permission.module_has_ui_permission_service_impl import (
+    ModuleHasUiPermissionServiceImpl,
 )
 
 
@@ -38,3 +58,20 @@ def get_api_permission_service() -> ApiPermissionService:
 
 def get_application_has_api_permission_service() -> ApplicationHasApiPermissionService:
     return ApplicationHasApiPermissionServiceImpl()
+
+
+def get_ui_permission_service() -> UiPermissionService:
+    return UiPermissionServiceImpl()
+
+
+def get_application_has_ui_permission_service() -> ApplicationHasUiPermissionService:
+    return ApplicationHasUiPermissionServiceImpl()
+
+
+def get_module_has_api_permission_service() -> ModuleHasApiPermissionService:
+    return ModuleHasApiPermissionServiceImpl()
+
+
+def get_module_has_ui_permission_service() -> ModuleHasUiPermissionService:
+    return ModuleHasUiPermissionServiceImpl()
+

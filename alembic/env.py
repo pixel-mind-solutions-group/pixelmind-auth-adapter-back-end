@@ -28,8 +28,13 @@ from models.realms_has_applications.realms_has_applications import RealmsHasAppl
 from models.module.module import Module
 from models.api_permission.api_permission import ApiPermission
 from models.application_has_api_permission.application_has_api_permission import ApplicationHasApiPermission
+from models.ui_permission.ui_permission import UiPermission
+from models.application_has_ui_permission.application_has_ui_permission import ApplicationHasUiPermission
+from models.module_has_api_permission.module_has_api_permission import ModuleHasApiPermission
+from models.module_has_ui_permission.module_has_ui_permission import ModuleHasUiPermission
 
 target_metadata = Base.metadata
+
 
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
