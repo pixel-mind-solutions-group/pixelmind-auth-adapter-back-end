@@ -16,6 +16,10 @@ from services.module_has_api_permission.module_has_api_permission_service import
 from services.module_has_ui_permission.module_has_ui_permission_service import (
     ModuleHasUiPermissionService,
 )
+from services.user_role.user_role_service import UserRoleService
+from services.user_role_has_modules.user_role_has_modules_service import (
+    UserRoleHasModulesService,
+)
 from services.impl.user.user_service_impl import UserServiceImpl
 from services.impl.application.application_service_impl import ApplicationServiceImpl
 from services.impl.realm.realm_service_impl import RealmServiceImpl
@@ -33,6 +37,10 @@ from services.impl.module_has_api_permission.module_has_api_permission_service_i
 )
 from services.impl.module_has_ui_permission.module_has_ui_permission_service_impl import (
     ModuleHasUiPermissionServiceImpl,
+)
+from services.impl.user_role.user_role_service_impl import UserRoleServiceImpl
+from services.impl.user_role_has_modules.user_role_has_modules_service_impl import (
+    UserRoleHasModulesServiceImpl,
 )
 
 
@@ -74,4 +82,13 @@ def get_module_has_api_permission_service() -> ModuleHasApiPermissionService:
 
 def get_module_has_ui_permission_service() -> ModuleHasUiPermissionService:
     return ModuleHasUiPermissionServiceImpl()
+
+
+def get_user_role_service() -> UserRoleService:
+    return UserRoleServiceImpl()
+
+
+def get_user_role_has_modules_service() -> UserRoleHasModulesService:
+    return UserRoleHasModulesServiceImpl()
+
 

@@ -21,6 +21,10 @@ from routers.module_has_api_permission.module_has_api_permission_router import (
 from routers.module_has_ui_permission.module_has_ui_permission_router import (
     router as module_has_ui_permission_router,
 )
+from routers.user_role.user_role_router import router as user_role_router
+from routers.user_role_has_modules.user_role_has_modules_router import (
+    router as user_role_has_modules_router,
+)
 from utils.migration import run_auto_migrations
 import configs.logging_config  # logging enabled
 from configs.cors_config import register_cors  # CORS enabled
@@ -44,6 +48,8 @@ app.include_router(ui_permission_router)
 app.include_router(application_has_ui_permission_router)
 app.include_router(module_has_api_permission_router)
 app.include_router(module_has_ui_permission_router)
+app.include_router(user_role_router)
+app.include_router(user_role_has_modules_router)
 
 
 register_exception_handlers(app)
