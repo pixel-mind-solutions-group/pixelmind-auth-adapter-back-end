@@ -25,6 +25,9 @@ from routers.user_role.user_role_router import router as user_role_router
 from routers.user_role_profile.user_role_profile_router import (
     router as user_role_profile_router,
 )
+from routers.user_profile.user_profile_router import (
+    router as user_profile_router,
+)
 from utils.migration import run_auto_migrations
 import configs.logging_config  # logging enabled
 from configs.cors_config import register_cors  # CORS enabled
@@ -50,6 +53,7 @@ app.include_router(module_has_api_permission_router)
 app.include_router(module_has_ui_permission_router)
 app.include_router(user_role_router)
 app.include_router(user_role_profile_router)
+app.include_router(user_profile_router)
 
 
 register_exception_handlers(app)

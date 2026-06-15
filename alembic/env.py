@@ -35,6 +35,7 @@ from models.module_has_ui_permission.module_has_ui_permission import ModuleHasUi
 from models.user_role.user_role import UserRole
 from models.user_role_has_modules_has_api_permission.user_role_has_modules_has_api_permission import UserRoleHasModulesHasApiPermission
 from models.user_role_has_modules_has_ui_permission.user_role_has_modules_has_ui_permission import UserRoleHasModulesHasUiPermission
+from models.user_profile.user_profile import UserProfile
 
 target_metadata = Base.metadata
 

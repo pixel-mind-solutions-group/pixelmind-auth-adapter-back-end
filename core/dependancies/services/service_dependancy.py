@@ -23,6 +23,10 @@ from services.user_role_profile.user_role_profile_service import (
 from services.impl.user_role_profile.user_role_profile_service_impl import (
     UserRoleProfileServiceImpl,
 )
+from services.user_profile.user_profile_service import UserProfileService
+from services.impl.user_profile.user_profile_service_impl import (
+    UserProfileServiceImpl,
+)
 from services.impl.user.user_service_impl import UserServiceImpl
 from services.impl.application.application_service_impl import ApplicationServiceImpl
 from services.impl.realm.realm_service_impl import RealmServiceImpl
@@ -90,5 +94,9 @@ def get_user_role_service() -> UserRoleService:
 
 def get_user_role_profile_service() -> UserRoleProfileService:
     return UserRoleProfileServiceImpl()
+
+
+def get_user_profile_service() -> UserProfileService:
+    return UserProfileServiceImpl()
 
 
