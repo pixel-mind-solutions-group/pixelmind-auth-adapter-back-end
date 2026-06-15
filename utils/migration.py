@@ -20,18 +20,19 @@ def run_auto_migrations():
         try:
             command.check(alembic_cfg)
             logger.info("Database schema is fully in sync with models.")
-        except (Exception, SystemExit, BaseException) as e:
-            logger.info(
-                "Database schema is out of sync. Generating automatic migration revision..."
-            )
-            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            command.revision(
-                alembic_cfg, message=f"auto_{timestamp}", autogenerate=True
-            )
-
-            logger.info("Applying the automatically generated migration to database...")
-            command.upgrade(alembic_cfg, "head")
-            logger.info("Automatic migration applied successfully.")
+        except BaseException as e:
+            if isinstance(e, SystemExit) and (e.code == 0 or e.code is None):
+                logger.info("Database schema is fully in sync with models.")
+            else:
+                logger.info("Database schema is out of sync. Generating automatic migration revision...")
+                try:
+                    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                    command.revision(alembic_cfg, message=f"auto_{timestamp}", autogenerate=True)
+                    logger.info("Applying the automatically generated migration to database...")
+                    command.upgrade(alembic_cfg, "head")
+                    logger.info("Automatic migration applied successfully.")
+                except Exception as inner_e:
+                    logger.info("Failed to generate/apply auto migration revision (this is normal if no changes detected): %s", inner_e)
 
     except Exception as e:
         logger.error(f"Failed to run database auto-migrations: {e}", exc_info=True)

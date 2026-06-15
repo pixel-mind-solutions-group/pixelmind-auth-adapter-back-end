@@ -17,8 +17,11 @@ from services.module_has_ui_permission.module_has_ui_permission_service import (
     ModuleHasUiPermissionService,
 )
 from services.user_role.user_role_service import UserRoleService
-from services.user_role_has_modules.user_role_has_modules_service import (
-    UserRoleHasModulesService,
+from services.user_role_profile.user_role_profile_service import (
+    UserRoleProfileService,
+)
+from services.impl.user_role_profile.user_role_profile_service_impl import (
+    UserRoleProfileServiceImpl,
 )
 from services.impl.user.user_service_impl import UserServiceImpl
 from services.impl.application.application_service_impl import ApplicationServiceImpl
@@ -39,9 +42,6 @@ from services.impl.module_has_ui_permission.module_has_ui_permission_service_imp
     ModuleHasUiPermissionServiceImpl,
 )
 from services.impl.user_role.user_role_service_impl import UserRoleServiceImpl
-from services.impl.user_role_has_modules.user_role_has_modules_service_impl import (
-    UserRoleHasModulesServiceImpl,
-)
 
 
 def get_user_service() -> UserService:
@@ -88,7 +88,7 @@ def get_user_role_service() -> UserRoleService:
     return UserRoleServiceImpl()
 
 
-def get_user_role_has_modules_service() -> UserRoleHasModulesService:
-    return UserRoleHasModulesServiceImpl()
+def get_user_role_profile_service() -> UserRoleProfileService:
+    return UserRoleProfileServiceImpl()
 
 
