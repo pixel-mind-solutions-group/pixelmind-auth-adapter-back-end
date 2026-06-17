@@ -15,6 +15,7 @@ def to_dto(mapping: RealmsHasApplications) -> ApplicationResponseDTO:
         dto.clientId = None
         dto.active = None
     dto.uuid = mapping.uuid if mapping else None
+    dto.internalApplicationUuid = mapping.internal_application_uuid if mapping else None
     dto.realm = to_realm_dto(mapping.realm) if mapping and mapping.realm else None
     return dto
 

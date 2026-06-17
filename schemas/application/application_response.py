@@ -9,6 +9,9 @@ class ApplicationResponseDTO(BaseModel):
         None, description="The client ID of the application"
     )
     uuid: Optional[str] = Field(None, description="The UUID of the application")
+    internalApplicationUuid: Optional[str] = Field(
+        None, description="The internal UUID of the application"
+    )
     active: Optional[bool] = Field(
         None, description="Indicates whether the application is active"
     )

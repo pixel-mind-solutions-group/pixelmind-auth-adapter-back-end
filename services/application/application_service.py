@@ -20,3 +20,12 @@ class ApplicationService(ABC):
         application_id: int = None,
     ) -> CommonResponseDTO:
         pass
+
+    @abstractmethod
+    def save_client_list_while_sync(self, db: Session, realm, clients_data: list) -> None:
+        pass
+
+    @abstractmethod
+    def deactivate_inactive_applications(self, db: Session, active_internal_uuids: list) -> None:
+        pass
+

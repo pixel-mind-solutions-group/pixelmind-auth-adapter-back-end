@@ -43,6 +43,7 @@ class ApplicationRepository:
                 or_(
                     Application.clientId.ilike(pattern),
                     RealmsHasApplications.uuid.ilike(pattern),
+                    RealmsHasApplications.internal_application_uuid.ilike(pattern),
                     Realm.realm.ilike(pattern),
                 )
             )

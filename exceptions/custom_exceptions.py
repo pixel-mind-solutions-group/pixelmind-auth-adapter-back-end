@@ -16,3 +16,8 @@ class NotFoundException(AppException):
 class BadRequestException(AppException):
     def __init__(self, message: str = "Bad request"):
         super().__init__(status.HTTP_400_BAD_REQUEST, message)
+
+
+class KeycloakIntegrationException(AppException):
+    def __init__(self, message: str = "Keycloak adapter service unavailable"):
+        super().__init__(status.HTTP_502_BAD_GATEWAY, message)

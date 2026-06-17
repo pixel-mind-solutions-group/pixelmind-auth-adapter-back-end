@@ -12,6 +12,9 @@ class Settings:
     DB_PASSWORD: str = os.getenv("DB_PASSWORD")
     
     ALLOWED_ORIGINS: str = os.getenv("ALLOWED_ORIGINS")
+    KEYCLOAK_ADAPTER_URL: str = os.getenv(
+        "KEYCLOAK_ADAPTER_URL", "http://10.71.76.77:8884/api/keycloak-adapter"
+    )
 
     @property
     def DATABASE_URL(self) -> str:
