@@ -46,6 +46,8 @@ from services.impl.module_has_ui_permission.module_has_ui_permission_service_imp
     ModuleHasUiPermissionServiceImpl,
 )
 from services.impl.user_role.user_role_service_impl import UserRoleServiceImpl
+from services.auth.auth_service import AuthService
+from services.impl.auth.auth_service_impl import AuthServiceImpl
 
 
 def get_user_service() -> UserService:
@@ -98,5 +100,9 @@ def get_user_role_profile_service() -> UserRoleProfileService:
 
 def get_user_profile_service() -> UserProfileService:
     return UserProfileServiceImpl()
+
+
+def get_auth_service() -> AuthService:
+    return AuthServiceImpl()
 
 

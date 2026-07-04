@@ -96,3 +96,23 @@ class KeycloakClient(ABC):
         Assigns client-level API permission roles to a user in Keycloak.
         """
         pass
+
+    @abstractmethod
+    def delete_user(self, realm_name: str, username: str) -> None:
+        """
+        Deletes a user from Keycloak under the specified realm.
+        """
+        pass
+
+    @abstractmethod
+    def get_token(
+        self,
+        realm_name: str,
+        internal_app_uuid: str,
+        username: str,
+        password: str,
+    ) -> dict:
+        """
+        Retrieves access and refresh tokens from Keycloak via Keycloak adapter backend.
+        """
+        pass

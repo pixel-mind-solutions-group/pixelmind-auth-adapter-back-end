@@ -215,24 +215,22 @@ class UserProfileServiceImpl(UserProfileService):
                 f"User Profile mapping with ID {profile_id} not found"
             )
 
-        # Keycloak Permission cleanup
+        # Keycloak User deletion
         try:
-            if entity.user and entity.realm and entity.application:
-                self.keycloak_client.assign_user_permissions(
+            if entity.user and entity.realm:
+                self.keycloak_client.delete_user(
                     realm_name=entity.realm.realm,
                     username=entity.user.username,
-                    client_id=entity.application.clientId,
-                    permissions=[],
                 )
         except AppException as e:
             raise
         except Exception as e:
             logger.error(
-                "Failed to unassign Keycloak permissions during user profile delete: %s",
+                "Failed to delete Keycloak user during user profile delete: %s",
                 e,
             )
             raise KeycloakIntegrationException(
-                f"Keycloak permission cleanup failed: {str(e)}"
+                f"Keycloak user deletion failed: {str(e)}"
             )
 
         self.repository.delete(db, entity)

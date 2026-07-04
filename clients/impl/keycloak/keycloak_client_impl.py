@@ -386,4 +386,102 @@ class KeycloakClientImpl(KeycloakClient):
             "KeycloakClientImpl => assign_user_permissions completed successfully"
         )
 
+    def delete_user(self, realm_name: str, username: str) -> None:
+        logger.info(
+            "KeycloakClientImpl => delete_user accessed. realm: %s, user: %s",
+            realm_name,
+            username,
+        )
+        import urllib.parse
+        encoded_realm = urllib.parse.quote(realm_name)
+        encoded_user = urllib.parse.quote(username)
+        url = f"{settings.KEYCLOAK_ADAPTER_URL}/user/delete?realmName={encoded_realm}&username={encoded_user}"
+        try:
+            req = urllib.request.Request(
+                url,
+                method="DELETE",
+            )
+            with urllib.request.urlopen(req, timeout=10) as response:
+                if response.status not in (200, 201):
+                    logger.error(
+                        f"Keycloak adapter returned status code {response.status}"
+                    )
+                    raise KeycloakIntegrationException(
+                        f"Failed to delete user in Keycloak. Status: {response.status}"
+                    )
+
+                res_body = json.loads(response.read().decode("utf-8"))
+                if res_body.get("status") not in (200, 201):
+                    msg = res_body.get("message", "Unknown error")
+                    logger.error(f"Keycloak adapter returned failure in body: {msg}")
+                    raise KeycloakIntegrationException(
+                        f"Failed to delete user in Keycloak: {msg}"
+                    )
+        except KeycloakIntegrationException:
+            raise
+        except urllib.error.HTTPError as e:
+            self._handle_http_error(e, "calling Keycloak adapter to delete user")
+        except Exception as e:
+            logger.error("Error calling Keycloak adapter to delete user: %s", e)
+            raise KeycloakIntegrationException(
+                f"Keycloak adapter service unavailable: {str(e)}"
+            )
+
+        logger.info("KeycloakClientImpl => delete_user completed successfully")
+
+    def get_token(
+        self,
+        realm_name: str,
+        internal_app_uuid: str,
+        username: str,
+        password: str,
+    ) -> dict:
+        logger.info(
+            "KeycloakClientImpl => get_token accessed. realm: %s, internal_app_uuid: %s, user: %s",
+            realm_name,
+            internal_app_uuid,
+            username,
+        )
+        url = f"{settings.KEYCLOAK_ADAPTER_URL}/auth/token/app"
+        payload = {
+            "realmName": realm_name,
+            "internalApplicationUuid": internal_app_uuid,
+            "username": username,
+            "password": password,
+        }
+        try:
+            req_data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(
+                url,
+                data=req_data,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=10) as response:
+                if response.status not in (200, 201):
+                    logger.error(
+                        f"Keycloak adapter returned status code {response.status}"
+                    )
+                    raise KeycloakIntegrationException(
+                        f"Failed to retrieve tokens in Keycloak. Status: {response.status}"
+                    )
+
+                res_body = json.loads(response.read().decode("utf-8"))
+                if res_body.get("status") not in (200, 201):
+                    msg = res_body.get("message", "Unknown error")
+                    logger.error(f"Keycloak adapter returned failure in body: {msg}")
+                    raise KeycloakIntegrationException(
+                        f"Failed to retrieve tokens in Keycloak: {msg}"
+                    )
+                return res_body.get("data", {})
+        except KeycloakIntegrationException:
+            raise
+        except urllib.error.HTTPError as e:
+            self._handle_http_error(e, "calling Keycloak adapter to get token")
+        except Exception as e:
+            logger.error("Error calling Keycloak adapter to get token: %s", e)
+            raise KeycloakIntegrationException(
+                f"Keycloak adapter service unavailable: {str(e)}"
+            )
+
 
