@@ -6,6 +6,11 @@ from exceptions.custom_exceptions import (
     BadRequestException,
     NotFoundException,
     AppException,
+    KeycloakIntegrationException,
+)
+from core.dependancies.clients.client_dependency import get_keycloak_client
+from models.user_role_has_modules_has_api_permission.user_role_has_modules_has_api_permission import (
+    UserRoleHasModulesHasApiPermission,
 )
 from schemas.common_response import CommonResponseDTO
 from schemas.user_profile.user_profile_request import UserProfileRequestDTO
@@ -23,8 +28,9 @@ logger = logging.getLogger(__name__)
 
 class UserProfileServiceImpl(UserProfileService):
 
-    def __init__(self):
+    def __init__(self, keycloak_client=None):
         self.repository = UserProfileRepository()
+        self.keycloak_client = keycloak_client or get_keycloak_client()
 
     def create_or_update_profile(
         self, db: Session, req_data: UserProfileRequestDTO
@@ -37,9 +43,15 @@ class UserProfileServiceImpl(UserProfileService):
             raise NotFoundException(f"Realm with ID {req_data.realmId} not found")
 
         # 2. Verify Application exists
-        app = db.query(Application).filter(Application.id == req_data.applicationId).first()
+        app = (
+            db.query(Application)
+            .filter(Application.id == req_data.applicationId)
+            .first()
+        )
         if not app:
-            raise NotFoundException(f"Application with ID {req_data.applicationId} not found")
+            raise NotFoundException(
+                f"Application with ID {req_data.applicationId} not found"
+            )
 
         # 3. Verify User exists
         user = db.query(User).filter(User.id == req_data.userId).first()
@@ -49,8 +61,13 @@ class UserProfileServiceImpl(UserProfileService):
         # 4. Verify UserRole exists and belongs to Realm/Application
         role = db.query(UserRole).filter(UserRole.id == req_data.userRoleId).first()
         if not role:
-            raise NotFoundException(f"User Role with ID {req_data.userRoleId} not found")
-        if role.realmId != req_data.realmId or role.applicationId != req_data.applicationId:
+            raise NotFoundException(
+                f"User Role with ID {req_data.userRoleId} not found"
+            )
+        if (
+            role.realmId != req_data.realmId
+            or role.applicationId != req_data.applicationId
+        ):
             raise BadRequestException(
                 f"User Role with ID {req_data.userRoleId} does not belong to the selected Realm/Application"
             )
@@ -59,15 +76,23 @@ class UserProfileServiceImpl(UserProfileService):
         existing_profiles = db.query(UserProfile).filter(
             UserProfile.userId == req_data.userId,
             UserProfile.realmId == req_data.realmId,
-            UserProfile.applicationId == req_data.applicationId
+            UserProfile.applicationId == req_data.applicationId,
         )
         if req_data.id and req_data.id != null:
             existing_profiles = existing_profiles.filter(UserProfile.id != req_data.id)
         existing_profiles = existing_profiles.all()
 
         if existing_profiles:
-            existing_role = db.query(UserRole).filter(UserRole.id == existing_profiles[0].userRoleId).first()
-            existing_role_name = existing_role.roleName if existing_role else f"ID {existing_profiles[0].userRoleId}"
+            existing_role = (
+                db.query(UserRole)
+                .filter(UserRole.id == existing_profiles[0].userRoleId)
+                .first()
+            )
+            existing_role_name = (
+                existing_role.roleName
+                if existing_role
+                else f"ID {existing_profiles[0].userRoleId}"
+            )
             raise BadRequestException(
                 f"User already has role '{existing_role_name}' mapped in this realm and application."
             )
@@ -78,11 +103,17 @@ class UserProfileServiceImpl(UserProfileService):
         if req_data.id and req_data.id != null:
             entity = self.repository.find_by_id(db, req_data.id)
             if not entity:
-                raise NotFoundException(f"User Profile mapping with ID {req_data.id} not found")
+                raise NotFoundException(
+                    f"User Profile mapping with ID {req_data.id} not found"
+                )
 
             # Check unique constraint for another entry
             existing = self.repository.find_by_composite(
-                db, req_data.userId, req_data.realmId, req_data.applicationId, req_data.userRoleId
+                db,
+                req_data.userId,
+                req_data.realmId,
+                req_data.applicationId,
+                req_data.userRoleId,
             )
             if existing and existing.id != req_data.id:
                 raise BadRequestException("User profile mapping already exists")
@@ -91,13 +122,61 @@ class UserProfileServiceImpl(UserProfileService):
         else:
             # Check composite unique constraint
             existing = self.repository.find_by_composite(
-                db, req_data.userId, req_data.realmId, req_data.applicationId, req_data.userRoleId
+                db,
+                req_data.userId,
+                req_data.realmId,
+                req_data.applicationId,
+                req_data.userRoleId,
             )
             if existing:
                 raise BadRequestException("User profile mapping already exists")
 
             entity = UserProfile()
             message = "User Profile mapped successfully"
+
+        # Keycloak Synchronization
+        try:
+            # Sync user in Keycloak under the realm
+            user_payload = {
+                "username": user.username,
+                "email": user.email,
+                "firstName": user.firstName,
+                "lastName": user.lastName,
+                "enabled": user.active,
+                "emailVerified": user.emailVerified,
+                "userRole": role.roleName,
+            }
+            self.keycloak_client.sync_user(realm.realm, user_payload)
+
+            # Fetch API permission names assigned to this user role
+            role_perms = (
+                db.query(UserRoleHasModulesHasApiPermission)
+                .filter(
+                    UserRoleHasModulesHasApiPermission.userRoleId == req_data.userRoleId
+                )
+                .all()
+            )
+
+            permission_names = [
+                rp.api_permission.apiPermissionName
+                for rp in role_perms
+                if rp.api_permission
+            ]
+
+            # Assign API permissions to the user in Keycloak
+            self.keycloak_client.assign_user_permissions(
+                realm_name=realm.realm,
+                username=user.username,
+                client_id=app.clientId,
+                permissions=permission_names,
+            )
+        except AppException:
+            raise
+        except Exception as e:
+            logger.error("Failed to sync user or assign permissions in Keycloak: %s", e)
+            raise KeycloakIntegrationException(
+                f"Keycloak synchronization failed: {str(e)}"
+            )
 
         try:
             entity = self.repository.create(db, mapper.to_model(entity, req_data))
@@ -118,7 +197,9 @@ class UserProfileServiceImpl(UserProfileService):
         logger.info("UserProfileServiceImpl => get_profile_by_id: %s", profile_id)
         entity = self.repository.find_by_id(db, profile_id)
         if not entity:
-            raise NotFoundException(f"User Profile mapping with ID {profile_id} not found")
+            raise NotFoundException(
+                f"User Profile mapping with ID {profile_id} not found"
+            )
 
         return CommonResponseDTO(
             status=status.HTTP_200_OK,
@@ -130,7 +211,29 @@ class UserProfileServiceImpl(UserProfileService):
         logger.info("UserProfileServiceImpl => delete_profile_by_id: %s", profile_id)
         entity = self.repository.find_by_id(db, profile_id)
         if not entity:
-            raise NotFoundException(f"User Profile mapping with ID {profile_id} not found")
+            raise NotFoundException(
+                f"User Profile mapping with ID {profile_id} not found"
+            )
+
+        # Keycloak Permission cleanup
+        try:
+            if entity.user and entity.realm and entity.application:
+                self.keycloak_client.assign_user_permissions(
+                    realm_name=entity.realm.realm,
+                    username=entity.user.username,
+                    client_id=entity.application.clientId,
+                    permissions=[],
+                )
+        except AppException as e:
+            raise
+        except Exception as e:
+            logger.error(
+                "Failed to unassign Keycloak permissions during user profile delete: %s",
+                e,
+            )
+            raise KeycloakIntegrationException(
+                f"Keycloak permission cleanup failed: {str(e)}"
+            )
 
         self.repository.delete(db, entity)
 
@@ -160,7 +263,14 @@ class UserProfileServiceImpl(UserProfileService):
             search_query,
         )
         profiles, total_pages, total = self.repository.search(
-            db, page, size, realm_id, application_id, user_id, user_role_id, search_query
+            db,
+            page,
+            size,
+            realm_id,
+            application_id,
+            user_id,
+            user_role_id,
+            search_query,
         )
         dtos = mapper.to_dto_list(profiles)
 

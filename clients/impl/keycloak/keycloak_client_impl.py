@@ -1,5 +1,6 @@
 import logging
 import urllib.request
+import urllib.error
 import json
 from clients.keycloak.keycloak_client import KeycloakClient
 from core.settings import settings
@@ -9,6 +10,15 @@ logger = logging.getLogger(__name__)
 
 
 class KeycloakClientImpl(KeycloakClient):
+
+    def _handle_http_error(self, e: urllib.error.HTTPError, action_desc: str) -> None:
+        try:
+            res_body = json.loads(e.read().decode("utf-8"))
+            msg = res_body.get("errorDescription") or res_body.get("message") or res_body.get("error") or str(e)
+        except Exception:
+            msg = str(e)
+        logger.error(f"Error {action_desc}: {msg}")
+        raise KeycloakIntegrationException(msg)
 
     def get_active_realms_and_clients(self) -> list:
         logger.info("KeycloakClientImpl => get_active_realms_and_clients accessed")
@@ -27,6 +37,8 @@ class KeycloakClientImpl(KeycloakClient):
                 res_body = json.loads(response.read().decode("utf-8"))
         except KeycloakIntegrationException:
             raise
+        except urllib.error.HTTPError as e:
+            self._handle_http_error(e, "fetching from keycloak adapter")
         except Exception as e:
             logger.error(f"Error fetching from keycloak adapter: {str(e)}")
             raise KeycloakIntegrationException(
@@ -81,6 +93,8 @@ class KeycloakClientImpl(KeycloakClient):
                     )
         except KeycloakIntegrationException:
             raise
+        except urllib.error.HTTPError as e:
+            self._handle_http_error(e, "calling Keycloak adapter to register permissions")
         except Exception as e:
             logger.error(
                 f"Error calling Keycloak adapter to register permissions: {str(e)}"
@@ -126,6 +140,8 @@ class KeycloakClientImpl(KeycloakClient):
                     )
         except KeycloakIntegrationException:
             raise
+        except urllib.error.HTTPError as e:
+            self._handle_http_error(e, "creating realm role in Keycloak adapter")
         except Exception as e:
             logger.error("Error creating realm role in Keycloak adapter: %s", e)
             raise KeycloakIntegrationException(
@@ -167,6 +183,8 @@ class KeycloakClientImpl(KeycloakClient):
                     )
         except KeycloakIntegrationException:
             raise
+        except urllib.error.HTTPError as e:
+            self._handle_http_error(e, "updating realm role in Keycloak adapter")
         except Exception as e:
             logger.error("Error updating realm role in Keycloak adapter: %s", e)
             raise KeycloakIntegrationException(
@@ -201,6 +219,8 @@ class KeycloakClientImpl(KeycloakClient):
                     )
         except KeycloakIntegrationException:
             raise
+        except urllib.error.HTTPError as e:
+            self._handle_http_error(e, "deleting realm role in Keycloak adapter")
         except Exception as e:
             logger.error("Error deleting realm role in Keycloak adapter: %s", e)
             raise KeycloakIntegrationException(
@@ -247,6 +267,8 @@ class KeycloakClientImpl(KeycloakClient):
                     )
         except KeycloakIntegrationException:
             raise
+        except urllib.error.HTTPError as e:
+            self._handle_http_error(e, "calling Keycloak adapter to delete permission")
         except Exception as e:
             logger.error(
                 f"Error calling Keycloak adapter to delete permission: {str(e)}"
@@ -257,6 +279,111 @@ class KeycloakClientImpl(KeycloakClient):
 
         logger.info(
             "KeycloakClientImpl => delete_api_permission completed successfully"
+        )
+
+    def sync_user(self, realm_name: str, user_data: dict) -> None:
+        logger.info(
+            "KeycloakClientImpl => sync_user accessed. realm: %s, user: %s",
+            realm_name,
+            user_data.get("username"),
+        )
+        import urllib.parse
+        encoded_realm = urllib.parse.quote(realm_name)
+        url = f"{settings.KEYCLOAK_ADAPTER_URL}/user/sync?realmName={encoded_realm}"
+        try:
+            req_data = json.dumps(user_data).encode("utf-8")
+            req = urllib.request.Request(
+                url,
+                data=req_data,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=10) as response:
+                if response.status not in (200, 201):
+                    logger.error(
+                        f"Keycloak adapter returned status code {response.status}"
+                    )
+                    raise KeycloakIntegrationException(
+                        f"Failed to sync user in Keycloak. Status: {response.status}"
+                    )
+
+                res_body = json.loads(response.read().decode("utf-8"))
+                if res_body.get("status") not in (200, 201):
+                    msg = res_body.get("message", "Unknown error")
+                    logger.error(f"Keycloak adapter returned failure in body: {msg}")
+                    raise KeycloakIntegrationException(
+                        f"Failed to sync user in Keycloak: {msg}"
+                    )
+        except KeycloakIntegrationException:
+            raise
+        except urllib.error.HTTPError as e:
+            self._handle_http_error(e, "calling Keycloak adapter to sync user")
+        except Exception as e:
+            logger.error("Error calling Keycloak adapter to sync user: %s", e)
+            raise KeycloakIntegrationException(
+                f"Keycloak adapter service unavailable: {str(e)}"
+            )
+
+        logger.info("KeycloakClientImpl => sync_user completed successfully")
+
+    def assign_user_permissions(
+        self,
+        realm_name: str,
+        username: str,
+        client_id: str,
+        permissions: list[str],
+    ) -> None:
+        logger.info(
+            "KeycloakClientImpl => assign_user_permissions accessed. realm: %s, user: %s, client: %s",
+            realm_name,
+            username,
+            client_id,
+        )
+        url = f"{settings.KEYCLOAK_ADAPTER_URL}/user/assign-permissions"
+        payload = {
+            "realmName": realm_name,
+            "username": username,
+            "clientId": client_id,
+            "permissions": permissions,
+        }
+        try:
+            req_data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(
+                url,
+                data=req_data,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=10) as response:
+                if response.status not in (200, 201):
+                    logger.error(
+                        f"Keycloak adapter returned status code {response.status}"
+                    )
+                    raise KeycloakIntegrationException(
+                        f"Failed to assign user permissions in Keycloak. Status: {response.status}"
+                    )
+
+                res_body = json.loads(response.read().decode("utf-8"))
+                if res_body.get("status") not in (200, 201):
+                    msg = res_body.get("message", "Unknown error")
+                    logger.error(f"Keycloak adapter returned failure in body: {msg}")
+                    raise KeycloakIntegrationException(
+                        f"Failed to assign user permissions in Keycloak: {msg}"
+                    )
+        except KeycloakIntegrationException:
+            raise
+        except urllib.error.HTTPError as e:
+            self._handle_http_error(e, "calling Keycloak adapter to assign user permissions")
+        except Exception as e:
+            logger.error(
+                f"Error calling Keycloak adapter to assign user permissions: {str(e)}"
+            )
+            raise KeycloakIntegrationException(
+                f"Keycloak adapter service unavailable: {str(e)}"
+            )
+
+        logger.info(
+            "KeycloakClientImpl => assign_user_permissions completed successfully"
         )
 
 

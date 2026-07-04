@@ -76,3 +76,23 @@ class KeycloakClient(ABC):
         Deletes an API permission (role) from Keycloak client.
         """
         pass
+
+    @abstractmethod
+    def sync_user(self, realm_name: str, user_data: dict) -> None:
+        """
+        Synchronizes a user in Keycloak under the specified realm.
+        """
+        pass
+
+    @abstractmethod
+    def assign_user_permissions(
+        self,
+        realm_name: str,
+        username: str,
+        client_id: str,
+        permissions: list[str],
+    ) -> None:
+        """
+        Assigns client-level API permission roles to a user in Keycloak.
+        """
+        pass
