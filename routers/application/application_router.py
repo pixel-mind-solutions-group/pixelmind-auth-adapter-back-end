@@ -35,14 +35,16 @@ async def search_applications(
     query: str = None,
     realm_id: int = None,
     application_id: int = None,
+    active: bool = None,
     db: Session = Depends(get_db),
 ) -> CommonResponseDTO:
     logger.info(
-        "application_router => search_applications function accessed: query=%s, realm_id=%s, application_id=%s",
+        "application_router => search_applications function accessed: query=%s, realm_id=%s, application_id=%s, active=%s",
         query,
         realm_id,
         application_id,
+        active,
     )
     return get_application_service().search_applications(
-        db, page, size, query, realm_id, application_id
+        db, page, size, query, realm_id, application_id, active
     )

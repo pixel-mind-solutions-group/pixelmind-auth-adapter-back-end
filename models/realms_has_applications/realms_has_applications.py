@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from core.database import Base
 
@@ -28,6 +28,7 @@ class RealmsHasApplications(Base):
         "application_id", Integer, ForeignKey("applications.id"), nullable=False
     )
     realm_id = Column("realm_id", Integer, ForeignKey("realms.id"), nullable=False)
+    active = Column("active", Boolean, nullable=False, default=True)
 
     application = relationship("Application", back_populates="realms")
     realm = relationship("Realm", back_populates="applications")

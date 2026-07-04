@@ -31,7 +31,8 @@ async def sync_realms_and_applications(
     description="This endpoint retrieves all active realms from the database.",
 )
 async def get_all_active_realms(
+    only_active: bool = True,
     db: Session = Depends(get_db),
 ) -> CommonResponseDTO:
-    logger.info("realm_router => get_all_active_realms function accessed")
-    return get_realm_service().get_all_active_realms(db)
+    logger.info("realm_router => get_all_active_realms function accessed: only_active=%s", only_active)
+    return get_realm_service().get_all_active_realms(db, only_active)

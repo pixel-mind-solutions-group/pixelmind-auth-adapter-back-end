@@ -15,6 +15,9 @@ from repositories.api_permission.api_permission_repository import (
 )
 import mapper.api_permission.api_permission_mapper as api_permission_mapper
 from models.api_permission.api_permission import ApiPermission
+from models.realm.realm import Realm
+from models.application_has_api_permission.application_has_api_permission import ApplicationHasApiPermission
+from core.dependancies.clients.client_dependency import get_keycloak_client
 from services.api_permission.api_permission_service import ApiPermissionService
 
 logger = logging.getLogger(__name__)
@@ -22,8 +25,9 @@ logger = logging.getLogger(__name__)
 
 class ApiPermissionServiceImpl(ApiPermissionService):
 
-    def __init__(self):
+    def __init__(self, keycloak_client=None):
         self.repository = ApiPermissionRepository()
+        self.keycloak_client = keycloak_client or get_keycloak_client()
 
     def create_or_update_permission(
         self, db: Session, req_data: ApiPermissionRequestDTO
@@ -43,6 +47,8 @@ class ApiPermissionServiceImpl(ApiPermissionService):
 
         message = None
         entity: ApiPermission = None
+        is_update = False
+        old_name = None
 
         if req_data.apiPermissionId and req_data.apiPermissionId != null:
             entity = self.repository.find_by_id(db, req_data.apiPermissionId)
@@ -50,6 +56,8 @@ class ApiPermissionServiceImpl(ApiPermissionService):
                 raise NotFoundException(
                     f"Permission with ID {req_data.apiPermissionId} not found"
                 )
+            is_update = True
+            old_name = entity.apiPermissionName
             entity.updatedAt = datetime.now()
             entity.updatedBy = "system"
             message = "Permission updated successfully"
@@ -60,6 +68,23 @@ class ApiPermissionServiceImpl(ApiPermissionService):
             message = "Permission created successfully"
 
         entity = api_permission_mapper.to_model(entity, req_data)
+
+        # Propagate role management to Keycloak active realms
+        active_realms = db.query(Realm).filter(Realm.active == True).all()
+        for r in active_realms:
+            if is_update:
+                self.keycloak_client.update_realm_role(
+                    realm_name=r.realm,
+                    old_role_name=old_name,
+                    new_role_name=entity.apiPermissionName,
+                    description=entity.description
+                )
+            else:
+                self.keycloak_client.create_realm_role(
+                    realm_name=r.realm,
+                    role_name=entity.apiPermissionName,
+                    description=entity.description
+                )
 
         try:
             entity = self.repository.create(db, entity)
@@ -94,6 +119,49 @@ class ApiPermissionServiceImpl(ApiPermissionService):
         if not entity:
             raise NotFoundException(f"Permission with ID {perm_id} not found")
 
+        # Validation: check if api permission is assigned to any application (profile mapping)
+        assigned = (
+            db.query(ApplicationHasApiPermission)
+            .filter(ApplicationHasApiPermission.apiPermissionId == perm_id)
+            .first()
+        )
+        if assigned:
+            raise BadRequestException(
+                f"Cannot delete permission '{entity.apiPermissionName}' as it is currently mapped to one or more applications"
+            )
+
+        # Delete module mappings referencing this API permission
+        from models.module_has_api_permission.module_has_api_permission import ModuleHasApiPermission
+        module_mappings = (
+            db.query(ModuleHasApiPermission)
+            .filter(ModuleHasApiPermission.apiPermissionId == perm_id)
+            .all()
+        )
+        for m_map in module_mappings:
+            db.delete(m_map)
+
+        # Delete user role profiles referencing this API permission
+        from models.user_role_has_modules_has_api_permission.user_role_has_modules_has_api_permission import UserRoleHasModulesHasApiPermission
+        user_role_mappings = (
+            db.query(UserRoleHasModulesHasApiPermission)
+            .filter(UserRoleHasModulesHasApiPermission.apiPermissionId == perm_id)
+            .all()
+        )
+        for ur_map in user_role_mappings:
+            db.delete(ur_map)
+
+        # Propagate realm role deletion to Keycloak active realms
+        active_realms = db.query(Realm).filter(Realm.active == True).all()
+        for r in active_realms:
+            try:
+                self.keycloak_client.delete_realm_role(
+                    realm_name=r.realm,
+                    role_name=entity.apiPermissionName
+                )
+            except Exception as e:
+                logger.error("Failed to delete realm role %s in Keycloak: %s", entity.apiPermissionName, e)
+
+        # Delete the permission definition
         self.repository.delete(db, entity)
 
         return CommonResponseDTO(

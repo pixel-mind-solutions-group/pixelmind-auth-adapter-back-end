@@ -18,6 +18,7 @@ class ApplicationService(ABC):
         query: str = None,
         realm_id: int = None,
         application_id: int = None,
+        active: bool = None,
     ) -> CommonResponseDTO:
         pass
 

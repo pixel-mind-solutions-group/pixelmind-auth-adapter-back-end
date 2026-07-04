@@ -126,10 +126,10 @@ class RealmServiceImpl(RealmService):
         db.flush()
         return saved_realms
 
-    def get_all_active_realms(self, db: Session) -> CommonResponseDTO:
-        logger.info("RealmServiceImpl => get_all_active_realms function accessed")
+    def get_all_active_realms(self, db: Session, only_active: bool = True) -> CommonResponseDTO:
+        logger.info("RealmServiceImpl => get_all_active_realms function accessed: only_active=%s", only_active)
         try:
-            realms = self.realm_repository.get_all_active_realms(db)
+            realms = self.realm_repository.get_all_active_realms(db, only_active)
             realm_dtos = realm_mapper.to_dto_list(realms)
             logger.info(
                 "RealmServiceImpl => get_all_active_realms function ended successfully"

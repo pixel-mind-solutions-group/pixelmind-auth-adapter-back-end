@@ -11,7 +11,7 @@ class ApplicationRepository:
         return (
             db.query(RealmsHasApplications)
             .join(Application, RealmsHasApplications.application_id == Application.id)
-            .filter(Application.active == True)
+            .filter(RealmsHasApplications.active == True)
             .order_by(RealmsHasApplications.id.desc())
             .all()
         )
@@ -24,6 +24,7 @@ class ApplicationRepository:
         query: str = None,
         realm_id: int = None,
         application_id: int = None,
+        active: bool = None,
     ):
         base_query = db.query(RealmsHasApplications).join(
             Application, RealmsHasApplications.application_id == Application.id
@@ -36,6 +37,9 @@ class ApplicationRepository:
 
         if application_id is not None and application_id != -1:
             base_query = base_query.filter(RealmsHasApplications.application_id == application_id)
+
+        if active is not None:
+            base_query = base_query.filter(RealmsHasApplications.active == active)
 
         if query:
             pattern = f"%{query}%"
@@ -50,7 +54,7 @@ class ApplicationRepository:
 
         total = base_query.with_entities(func.count(RealmsHasApplications.id)).scalar() or 0
 
-        applications = base_query.offset(page * size).limit(size).all()
+        applications = base_query.order_by(RealmsHasApplications.id.desc()).offset(page * size).limit(size).all()
 
         total_pages = math.ceil(total / size) if size > 0 else 1
 

@@ -55,6 +55,23 @@ class UserProfileServiceImpl(UserProfileService):
                 f"User Role with ID {req_data.userRoleId} does not belong to the selected Realm/Application"
             )
 
+        # 4.5. Validate user cannot have multiple roles in the same realm and same application
+        existing_profiles = db.query(UserProfile).filter(
+            UserProfile.userId == req_data.userId,
+            UserProfile.realmId == req_data.realmId,
+            UserProfile.applicationId == req_data.applicationId
+        )
+        if req_data.id and req_data.id != null:
+            existing_profiles = existing_profiles.filter(UserProfile.id != req_data.id)
+        existing_profiles = existing_profiles.all()
+
+        if existing_profiles:
+            existing_role = db.query(UserRole).filter(UserRole.id == existing_profiles[0].userRoleId).first()
+            existing_role_name = existing_role.roleName if existing_role else f"ID {existing_profiles[0].userRoleId}"
+            raise BadRequestException(
+                f"User already has role '{existing_role_name}' mapped in this realm and application."
+            )
+
         message = None
         entity: UserProfile = None
 

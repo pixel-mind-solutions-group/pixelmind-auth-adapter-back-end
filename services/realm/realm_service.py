@@ -14,6 +14,6 @@ class RealmService(ABC):
         pass
 
     @abstractmethod
-    def get_all_active_realms(self, db: Session) -> CommonResponseDTO:
+    def get_all_active_realms(self, db: Session, only_active: bool = True) -> CommonResponseDTO:
         pass
 

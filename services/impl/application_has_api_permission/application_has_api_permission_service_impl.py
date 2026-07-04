@@ -4,6 +4,7 @@ from fastapi import status
 from exceptions.custom_exceptions import (
     BadRequestException,
     NotFoundException,
+    KeycloakIntegrationException,
 )
 from schemas.common_response import CommonResponseDTO
 from schemas.application_has_api_permission.application_has_api_permission_request import (
@@ -15,6 +16,8 @@ from models.api_permission.api_permission import ApiPermission
 from models.application_has_api_permission.application_has_api_permission import (
     ApplicationHasApiPermission,
 )
+from models.realms_has_applications.realms_has_applications import RealmsHasApplications
+from core.dependancies.clients.client_dependency import get_keycloak_client
 from repositories.application_has_api_permission.application_has_api_permission_repository import (
     ApplicationHasApiPermissionRepository,
 )
@@ -28,8 +31,9 @@ logger = logging.getLogger(__name__)
 
 class ApplicationHasApiPermissionServiceImpl(ApplicationHasApiPermissionService):
 
-    def __init__(self):
+    def __init__(self, keycloak_client=None):
         self.repository = ApplicationHasApiPermissionRepository()
+        self.keycloak_client = keycloak_client or get_keycloak_client()
 
     def create_profile(
         self, db: Session, req_data: ApplicationHasApiPermissionRequestDTO
@@ -54,13 +58,36 @@ class ApplicationHasApiPermissionServiceImpl(ApplicationHasApiPermissionService)
                 f"Application with ID {req_data.applicationId} not found"
             )
 
-        # 3. Verify all API Permissions exist
+        # 3. Verify all API Permissions exist and retrieve their names
+        api_permission_names = []
         for perm_id in req_data.apiPermissionIdList:
             perm = db.query(ApiPermission).filter(ApiPermission.id == perm_id).first()
             if not perm:
                 raise NotFoundException(f"API Permission with ID {perm_id} not found")
+            api_permission_names.append(perm.apiPermissionName)
 
-        # 4. Create and save new mappings without deleting previously saved records
+        # 4. Fetch RealmsHasApplications mapping to get internal application UUID
+        realm_app_mapping = (
+            db.query(RealmsHasApplications)
+            .filter(
+                RealmsHasApplications.realm_id == req_data.realmId,
+                RealmsHasApplications.application_id == req_data.applicationId,
+            )
+            .first()
+        )
+        if not realm_app_mapping:
+            raise NotFoundException(
+                f"Realm has application mapping not found for realm ID {req_data.realmId} and application ID {req_data.applicationId}"
+            )
+
+        # 5. Create the API permissions in Keycloak via Keycloak Client
+        self.keycloak_client.create_api_permissions(
+            realm_internal_uuid=realm.internal_uuid,
+            internal_app_uuid=realm_app_mapping.internal_application_uuid,
+            permission_names=api_permission_names,
+        )
+
+        # 6. Create and save new mappings without deleting previously saved records
         created_entities = []
         for perm_id in req_data.apiPermissionIdList:
             existing = self.repository.find_by_realm_app_and_permission(
@@ -94,6 +121,28 @@ class ApplicationHasApiPermissionServiceImpl(ApplicationHasApiPermissionService)
             raise NotFoundException(
                 f"Application API Permission mapping with ID {mapping_id} not found"
             )
+
+        # Retrieve the API permission name and mapping to call Keycloak client-role deletion
+        perm = db.query(ApiPermission).filter(ApiPermission.id == mapping.apiPermissionId).first()
+        realm = db.query(Realm).filter(Realm.id == mapping.realmId).first()
+        realm_app_mapping = (
+            db.query(RealmsHasApplications)
+            .filter(
+                RealmsHasApplications.realm_id == mapping.realmId,
+                RealmsHasApplications.application_id == mapping.applicationId,
+            )
+            .first()
+        )
+
+        if perm and realm and realm_app_mapping:
+            try:
+                self.keycloak_client.delete_api_permission(
+                    realm_internal_uuid=realm.internal_uuid,
+                    internal_app_uuid=realm_app_mapping.internal_application_uuid,
+                    permission_name=perm.apiPermissionName,
+                )
+            except Exception as e:
+                logger.error("Failed to delete client-level permission from Keycloak: %s", e)
 
         self.repository.delete(db, mapping)
 

@@ -9,11 +9,10 @@ def to_dto(mapping: RealmsHasApplications) -> ApplicationResponseDTO:
     if mapping and mapping.application:
         dto.id = mapping.application.id
         dto.clientId = mapping.application.clientId
-        dto.active = mapping.application.active
     else:
         dto.id = None
         dto.clientId = None
-        dto.active = None
+    dto.active = mapping.active if mapping else None
     dto.uuid = mapping.uuid if mapping else None
     dto.internalApplicationUuid = mapping.internal_application_uuid if mapping else None
     dto.realm = to_realm_dto(mapping.realm) if mapping and mapping.realm else None

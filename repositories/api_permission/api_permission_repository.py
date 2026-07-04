@@ -35,7 +35,7 @@ class ApiPermissionRepository:
 
         total = base_query.with_entities(func.count(ApiPermission.id)).scalar() or 0
 
-        perms = base_query.offset(page * size).limit(size).all()
+        perms = base_query.order_by(ApiPermission.id.desc()).offset(page * size).limit(size).all()
 
         total_pages = math.ceil(total / size) if size > 0 else 1
 

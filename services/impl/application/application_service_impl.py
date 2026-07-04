@@ -41,16 +41,18 @@ class ApplicationServiceImpl(ApplicationService):
         query: str = None,
         realm_id: int = None,
         application_id: int = None,
+        active: bool = None,
     ) -> CommonResponseDTO:
         logger.info(
-            "ApplicationServiceImpl => search_applications function accessed: query=%s, realm_id=%s, application_id=%s",
+            "ApplicationServiceImpl => search_applications function accessed: query=%s, realm_id=%s, application_id=%s, active=%s",
             query,
             realm_id,
             application_id,
+            active,
         )
 
         applications, total_pages, total = self.application_repository.search(
-            db, page, size, query, realm_id, application_id
+            db, page, size, query, realm_id, application_id, active
         )
         application_dtos = application_mapper.to_dto_list(applications)
 
@@ -80,7 +82,8 @@ class ApplicationServiceImpl(ApplicationService):
         for client_data in clients_data:
             internal_uuid = client_data.get("id")
             client_id = client_data.get("clientId")
-            is_active = client_data.get("active", True) if realm.active else False
+            global_active = client_data.get("active", True)
+            is_active = global_active if realm.active else False
 
             if not internal_uuid or not client_id:
                 continue
@@ -105,8 +108,9 @@ class ApplicationServiceImpl(ApplicationService):
                 )
                 if app_obj:
                     app_obj.clientId = client_id
-                    app_obj.active = is_active
+                    app_obj.active = global_active
                 mapping.realm_id = realm.id
+                mapping.active = is_active
             else:
                 # Check if Application exists with the same client_id
                 app_obj = (
@@ -115,17 +119,18 @@ class ApplicationServiceImpl(ApplicationService):
                     .first()
                 )
                 if not app_obj:
-                    app_obj = Application(clientId=client_id, active=is_active)
+                    app_obj = Application(clientId=client_id, active=global_active)
                     db.add(app_obj)
                     db.flush()
                 else:
-                    app_obj.active = is_active
+                    app_obj.active = global_active
 
                 # Create a new mapping
                 mapping = RealmsHasApplications(
                     internal_application_uuid=internal_uuid,
                     application_id=app_obj.id,
                     realm_id=realm.id,
+                    active=is_active,
                 )
                 db.add(mapping)
 
@@ -137,15 +142,15 @@ class ApplicationServiceImpl(ApplicationService):
         logger.info(
             "ApplicationServiceImpl => deactivate_inactive_applications accessed"
         )
-        inactive_apps_query = db.query(RealmsHasApplications.application_id)
+        query = db.query(RealmsHasApplications)
         if active_internal_uuids:
-            inactive_apps_query = inactive_apps_query.filter(
+            query = query.filter(
                 RealmsHasApplications.internal_application_uuid.not_in(
                     active_internal_uuids
                 )
             )
 
-        db.query(Application).filter(Application.id.in_(inactive_apps_query)).update(
-            {Application.active: False}, synchronize_session=False
-        )
+        query.update({RealmsHasApplications.active: False}, synchronize_session=False)
         db.flush()
+
+
