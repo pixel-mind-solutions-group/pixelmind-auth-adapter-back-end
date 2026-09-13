@@ -36,3 +36,42 @@ async def get_all_active_realms(
 ) -> CommonResponseDTO:
     logger.info("realm_router => get_all_active_realms function accessed: only_active=%s", only_active)
     return get_realm_service().get_all_active_realms(db, only_active)
+
+
+@router.delete(
+    "/{realm_id}",
+    response_model=CommonResponseDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Delete realm and all related data",
+    description="This endpoint deletes a realm and all associated data inside the database without validation.",
+)
+async def delete_realm(
+    realm_id: int,
+    db: Session = Depends(get_db),
+) -> CommonResponseDTO:
+    logger.info("realm_router => delete_realm function accessed: realm_id=%s", realm_id)
+    return get_realm_service().delete_realm(db, realm_id)
+
+
+@router.delete(
+    "/{realm_id}/application/{application_id}",
+    response_model=CommonResponseDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Delete all data by realm and application",
+    description="This endpoint deletes all data related to the specified realm and application inside the database without validation.",
+)
+async def delete_by_realm_and_application(
+    realm_id: int,
+    application_id: int,
+    db: Session = Depends(get_db),
+) -> CommonResponseDTO:
+    logger.info(
+        "realm_router => delete_by_realm_and_application function accessed: realm_id=%s, application_id=%s",
+        realm_id,
+        application_id,
+    )
+    return get_realm_service().delete_by_realm_and_application(
+        db, realm_id, application_id
+    )
+
+

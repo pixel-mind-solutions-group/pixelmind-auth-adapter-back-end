@@ -17,3 +17,12 @@ class RealmService(ABC):
     def get_all_active_realms(self, db: Session, only_active: bool = True) -> CommonResponseDTO:
         pass
 
+    @abstractmethod
+    def delete_realm(self, db: Session, realm_id: int) -> CommonResponseDTO:
+        pass
+
+    @abstractmethod
+    def delete_by_realm_and_application(
+        self, db: Session, realm_id: int, application_id: int
+    ) -> CommonResponseDTO:
+        pass

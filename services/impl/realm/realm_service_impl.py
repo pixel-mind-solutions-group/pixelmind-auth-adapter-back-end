@@ -146,3 +146,76 @@ class RealmServiceImpl(RealmService):
                 message=f"Failed to fetch active realms: {str(e)}",
                 data=None,
             )
+
+    def delete_realm(self, db: Session, realm_id: int) -> CommonResponseDTO:
+        logger.info("RealmServiceImpl => delete_realm function accessed: realm_id=%s", realm_id)
+        realm = self.realm_repository.get_by_id(db, realm_id)
+        if not realm:
+            logger.warning("RealmServiceImpl => Realm with ID %s not found", realm_id)
+            return CommonResponseDTO(
+                status=status.HTTP_404_NOT_FOUND,
+                message=f"Realm with ID {realm_id} not found",
+                data=None,
+            )
+
+        realm_name = realm.realm
+        try:
+            self.realm_repository.delete_realm_and_related_data(db, realm_id)
+            db.commit()
+            logger.info(
+                "RealmServiceImpl => Successfully deleted realm '%s' (ID: %s) and all related data",
+                realm_name,
+                realm_id,
+            )
+            return CommonResponseDTO(
+                status=status.HTTP_200_OK,
+                message=f"Realm '{realm_name}' and all related data deleted successfully",
+                data=None,
+            )
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error deleting realm {realm_id} and related data: {str(e)}")
+            return CommonResponseDTO(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                message=f"Failed to delete realm: {str(e)}",
+                data=None,
+            )
+
+    def delete_by_realm_and_application(
+        self, db: Session, realm_id: int, application_id: int
+    ) -> CommonResponseDTO:
+        logger.info(
+            "RealmServiceImpl => delete_by_realm_and_application function accessed: realm_id=%s, application_id=%s",
+            realm_id,
+            application_id,
+        )
+        try:
+            self.realm_repository.delete_by_realm_and_application_data(
+                db, realm_id, application_id
+            )
+            db.commit()
+            logger.info(
+                "RealmServiceImpl => Successfully deleted all data for realm_id=%s and application_id=%s",
+                realm_id,
+                application_id,
+            )
+            return CommonResponseDTO(
+                status=status.HTTP_200_OK,
+                message="Data for realm and application deleted successfully",
+                data=None,
+            )
+        except Exception as e:
+            db.rollback()
+            logger.error(
+                "Error deleting data for realm %s and app %s: %s",
+                realm_id,
+                application_id,
+                str(e),
+            )
+            return CommonResponseDTO(
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                message=f"Failed to delete data: {str(e)}",
+                data=None,
+            )
+
+
