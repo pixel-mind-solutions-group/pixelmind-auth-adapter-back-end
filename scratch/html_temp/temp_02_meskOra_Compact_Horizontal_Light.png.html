@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 2000px;
+    height: 550px;
+    background-color: #FFFFFF;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  }
+  .svg-container {
+    width: 90%;
+    height: 90%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>
+</head>
+<body>
+<div class="svg-container">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 64" width="100%" height="100%">
+  <defs>
+    <linearGradient id="comp-cyan-blue" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00D2D3"/>
+      <stop offset="60%" stop-color="#0EA5E9"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="comp-blue-deep" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="60%" stop-color="#1D4ED8"/>
+      <stop offset="100%" stop-color="#0B132B"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Compact Symbol -->
+  <g transform="translate(6, 6) scale(0.52)">
+    <path d="M 22 74 L 22 42 C 22 26, 38 26, 38 42 L 38 74" 
+          fill="none" stroke="url(#comp-cyan-blue)" stroke-width="12" stroke-linecap="round"/>
+    <path d="M 38 48 C 38 30, 54 24, 68 24 C 83 24, 93 36, 93 51 C 93 66, 83 78, 68 78 C 53 78, 43 66, 43 51 C 43 42, 48 35, 57 29" 
+          fill="none" stroke="url(#comp-blue-deep)" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="68" cy="51" r="5" fill="#00D2D3"/>
+  </g>
+
+  <!-- Compact Wordmark -->
+  <text x="68" y="44" 
+        font-family="'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
+        font-size="34" 
+        font-weight="700" 
+        letter-spacing="-0.4">
+    <tspan fill="#0F172A">mesk</tspan><tspan fill="#2563EB">O</tspan><tspan fill="#0F172A">ra</tspan>
+  </text>
+  
+  <!-- Subtle compact tech badge -->
+  <rect x="238" y="24" width="106" height="22" rx="6" fill="#F1F5F9"/>
+  <text x="291" y="39" 
+        font-family="'Plus Jakarta Sans', 'Inter', sans-serif" 
+        font-size="10.5" 
+        font-weight="700" 
+        fill="#2563EB" 
+        text-anchor="middle" 
+        letter-spacing="1.2">
+    TECH
+  </text>
+</svg>
+
+</div>
+</body>
+</html>

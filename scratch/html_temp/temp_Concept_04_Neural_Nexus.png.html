@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 1200px;
+    height: 1200px;
+    background-color: #070B14;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  }
+  .svg-container {
+    width: 75%;
+    height: 75%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>
+</head>
+<body>
+<div class="svg-container">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <linearGradient id="c4-grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D2D3"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+    <linearGradient id="c4-grad2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Left Crescent / Neural Arc -->
+  <path d="M 50 16 
+           C 28 16, 14 32, 14 50 
+           C 14 68, 28 84, 50 84 
+           C 40 76, 30 64, 30 50 
+           C 30 36, 40 24, 50 16 Z" 
+        fill="url(#c4-grad1)"/>
+
+  <!-- Right Crescent / Data Flow Arc -->
+  <path d="M 50 16 
+           C 72 16, 86 32, 86 50 
+           C 86 68, 72 84, 50 84 
+           C 60 76, 70 64, 70 50 
+           C 70 36, 60 24, 50 16 Z" 
+        fill="url(#c4-grad2)"/>
+
+  <!-- Internal 'm' bridge and Core Orb 'O' -->
+  <path d="M 38 60 L 38 46 C 38 42, 44 42, 44 46 L 44 60" 
+        stroke="#00D2D3" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <path d="M 44 46 C 44 42, 50 42, 50 46 L 50 60" 
+        stroke="#00D2D3" stroke-width="4" stroke-linecap="round" fill="none"/>
+        
+  <!-- Central Intelligent Singularity 'O' -->
+  <circle cx="62" cy="50" r="7" fill="#0EA5E9"/>
+  <circle cx="62" cy="50" r="3" fill="#FFFFFF"/>
+</svg>
+
+</div>
+</body>
+</html>

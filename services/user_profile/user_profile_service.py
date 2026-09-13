@@ -33,3 +33,13 @@ class UserProfileService(ABC):
         search_query: str = None,
     ) -> CommonResponseDTO:
         pass
+
+    @abstractmethod
+    def sync_users_by_role_scope(
+        self,
+        db: Session,
+        realm_id: int,
+        role_scope: str,
+        payload: dict,
+    ) -> CommonResponseDTO:
+        pass

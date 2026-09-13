@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <linearGradient id="c7-orbit1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D2D3"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="c7-orbit2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Elliptical Orbits tilted at 45 & -45 degrees -->
+  <ellipse cx="50" cy="50" rx="38" ry="16" fill="none" stroke="url(#c7-orbit1)" stroke-width="7" transform="rotate(-30 50 50)"/>
+  <ellipse cx="50" cy="50" rx="38" ry="16" fill="none" stroke="url(#c7-orbit2)" stroke-width="7" transform="rotate(30 50 50)"/>
+  
+  <!-- Central Catalyst Core Sphere 'O' -->
+  <circle cx="50" cy="50" r="10" fill="#00D2D3"/>
+  <circle cx="50" cy="50" r="4" fill="#FFFFFF"/>
+</svg>

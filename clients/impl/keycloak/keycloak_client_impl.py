@@ -14,7 +14,12 @@ class KeycloakClientImpl(KeycloakClient):
     def _handle_http_error(self, e: urllib.error.HTTPError, action_desc: str) -> None:
         try:
             res_body = json.loads(e.read().decode("utf-8"))
-            msg = res_body.get("errorDescription") or res_body.get("message") or res_body.get("error") or str(e)
+            msg = (
+                res_body.get("errorDescription")
+                or res_body.get("message")
+                or res_body.get("error")
+                or str(e)
+            )
         except Exception:
             msg = str(e)
         logger.error(f"Error {action_desc}: {msg}")
@@ -94,7 +99,9 @@ class KeycloakClientImpl(KeycloakClient):
         except KeycloakIntegrationException:
             raise
         except urllib.error.HTTPError as e:
-            self._handle_http_error(e, "calling Keycloak adapter to register permissions")
+            self._handle_http_error(
+                e, "calling Keycloak adapter to register permissions"
+            )
         except Exception as e:
             logger.error(
                 f"Error calling Keycloak adapter to register permissions: {str(e)}"
@@ -107,17 +114,19 @@ class KeycloakClientImpl(KeycloakClient):
             "KeycloakClientImpl => create_api_permissions completed successfully"
         )
 
-    def create_realm_role(self, realm_name: str, role_name: str, description: str = None) -> None:
+    def create_realm_role(
+        self, realm_name: str, role_name: str, description: str = None
+    ) -> None:
         logger.info(
             "KeycloakClientImpl => create_realm_role: realm: %s, role: %s",
             realm_name,
-            role_name
+            role_name,
         )
         url = f"{settings.KEYCLOAK_ADAPTER_URL}/role/realm/create"
         payload = {
             "realmName": realm_name,
             "name": role_name,
-            "description": description
+            "description": description,
         }
         try:
             req_data = json.dumps(payload).encode("utf-8")
@@ -148,19 +157,25 @@ class KeycloakClientImpl(KeycloakClient):
                 f"Keycloak adapter service unavailable: {str(e)}"
             )
 
-    def update_realm_role(self, realm_name: str, old_role_name: str, new_role_name: str, description: str = None) -> None:
+    def update_realm_role(
+        self,
+        realm_name: str,
+        old_role_name: str,
+        new_role_name: str,
+        description: str = None,
+    ) -> None:
         logger.info(
             "KeycloakClientImpl => update_realm_role: realm: %s, oldRole: %s, newRole: %s",
             realm_name,
             old_role_name,
-            new_role_name
+            new_role_name,
         )
         url = f"{settings.KEYCLOAK_ADAPTER_URL}/role/realm/update"
         payload = {
             "realmName": realm_name,
             "name": old_role_name,
             "newName": new_role_name,
-            "description": description
+            "description": description,
         }
         try:
             req_data = json.dumps(payload).encode("utf-8")
@@ -195,9 +210,10 @@ class KeycloakClientImpl(KeycloakClient):
         logger.info(
             "KeycloakClientImpl => delete_realm_role: realm: %s, role: %s",
             realm_name,
-            role_name
+            role_name,
         )
         import urllib.parse
+
         encoded_realm = urllib.parse.quote(realm_name)
         encoded_role = urllib.parse.quote(role_name)
         url = f"{settings.KEYCLOAK_ADAPTER_URL}/role/realm/delete?realmName={encoded_realm}&roleName={encoded_role}"
@@ -240,6 +256,7 @@ class KeycloakClientImpl(KeycloakClient):
             permission_name,
         )
         import urllib.parse
+
         encoded_realm_uuid = urllib.parse.quote(realm_internal_uuid)
         encoded_app_uuid = urllib.parse.quote(internal_app_uuid)
         encoded_perm_name = urllib.parse.quote(permission_name)
@@ -288,6 +305,7 @@ class KeycloakClientImpl(KeycloakClient):
             user_data.get("username"),
         )
         import urllib.parse
+
         encoded_realm = urllib.parse.quote(realm_name)
         url = f"{settings.KEYCLOAK_ADAPTER_URL}/user/sync?realmName={encoded_realm}"
         try:
@@ -373,7 +391,9 @@ class KeycloakClientImpl(KeycloakClient):
         except KeycloakIntegrationException:
             raise
         except urllib.error.HTTPError as e:
-            self._handle_http_error(e, "calling Keycloak adapter to assign user permissions")
+            self._handle_http_error(
+                e, "calling Keycloak adapter to assign user permissions"
+            )
         except Exception as e:
             logger.error(
                 f"Error calling Keycloak adapter to assign user permissions: {str(e)}"
@@ -393,6 +413,7 @@ class KeycloakClientImpl(KeycloakClient):
             username,
         )
         import urllib.parse
+
         encoded_realm = urllib.parse.quote(realm_name)
         encoded_user = urllib.parse.quote(username)
         url = f"{settings.KEYCLOAK_ADAPTER_URL}/user/delete?realmName={encoded_realm}&username={encoded_user}"
@@ -484,4 +505,111 @@ class KeycloakClientImpl(KeycloakClient):
                 f"Keycloak adapter service unavailable: {str(e)}"
             )
 
+    def sync_user_role_api_permissions_of_realm_and_application(
+        self,
+        realm_internal_uuid: str,
+        application_internal_uuid: str,
+        role_wise_permissions: list[dict],
+    ) -> None:
+        logger.info(
+            "KeycloakClientImpl => sync_user_role_api_permissions_of_realm_and_application accessed. realm: %s, application: %s",
+            realm_internal_uuid,
+            application_internal_uuid,
+        )
+        encoded_realm_uuid = urllib.parse.quote(realm_internal_uuid)
+        encoded_application_uuid = urllib.parse.quote(application_internal_uuid)
+        url = f"{settings.KEYCLOAK_ADAPTER_URL}/role/sync-api-permissions?realmInternalUuid={encoded_realm_uuid}&applicationInternalUuid={encoded_application_uuid}"
+        payload = role_wise_permissions
+        try:
+            req_data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(
+                url,
+                data=req_data,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=10) as response:
+                if response.status not in (200, 201):
+                    logger.error(
+                        f"Keycloak adapter returned status code {response.status}"
+                    )
+                    raise KeycloakIntegrationException(
+                        f"Failed to sync API permissions in Keycloak. Status: {response.status}"
+                    )
 
+                res_body = json.loads(response.read().decode("utf-8"))
+                if res_body.get("status") not in (200, 201):
+                    msg = res_body.get("message", "Unknown error")
+                    logger.error(f"Keycloak adapter returned failure in body: {msg}")
+                    raise KeycloakIntegrationException(
+                        f"Failed to sync API permissions in Keycloak: {msg}"
+                    )
+                return res_body.get("data", {})
+        except KeycloakIntegrationException:
+            raise
+        except urllib.error.HTTPError as e:
+            self._handle_http_error(
+                e, "calling Keycloak adapter to sync API permissions"
+            )
+        except Exception as e:
+            logger.error(
+                "Error calling Keycloak adapter to sync API permissions: %s", e
+            )
+            raise KeycloakIntegrationException(
+                f"Keycloak adapter service unavailable: {str(e)}"
+            )
+
+    def sync_users_by_role_scope(
+        self,
+        realm_name: str,
+        role_scope: str,
+        payload: dict,
+    ) -> dict:
+        logger.info(
+            "KeycloakClientImpl => sync_users_by_role_scope accessed. realm: %s, role_scope: %s",
+            realm_name,
+            role_scope,
+        )
+        import urllib.parse
+
+        encoded_realm = urllib.parse.quote(realm_name)
+        encoded_role_scope = urllib.parse.quote(role_scope)
+        url = f"{settings.KEYCLOAK_ADAPTER_URL}/user/sync-by-role-scope?realmName={encoded_realm}&roleScope={encoded_role_scope}"
+        try:
+            req_data = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(
+                url,
+                data=req_data,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=10) as response:
+                if response.status not in (200, 201):
+                    logger.error(
+                        f"Keycloak adapter returned status code {response.status}"
+                    )
+                    raise KeycloakIntegrationException(
+                        f"Failed to sync users by role scope in Keycloak. Status: {response.status}"
+                    )
+
+                res_body = json.loads(response.read().decode("utf-8"))
+                if res_body.get("status") not in (200, 201):
+                    msg = res_body.get("message", "Unknown error")
+                    logger.error(f"Keycloak adapter returned failure in body: {msg}")
+                    raise KeycloakIntegrationException(
+                        f"Failed to sync users by role scope in Keycloak: {msg}"
+                    )
+                return res_body.get("data", {})
+        except KeycloakIntegrationException:
+            raise
+        except urllib.error.HTTPError as e:
+            self._handle_http_error(
+                e, "calling Keycloak adapter to sync users by role scope"
+            )
+        except Exception as e:
+            logger.error(
+                "Error calling Keycloak adapter to sync users by role scope: %s", e
+            )
+            raise KeycloakIntegrationException(
+                f"Keycloak adapter service unavailable: {str(e)}"
+            )

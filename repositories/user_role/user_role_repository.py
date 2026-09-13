@@ -47,7 +47,7 @@ class UserRoleRepository:
             base_query = base_query.filter(
                 or_(
                     UserRole.roleName.ilike(pattern),
-                    UserRole.description.ilike(pattern)
+                    UserRole.description.ilike(pattern),
                 )
             )
 
@@ -61,7 +61,12 @@ class UserRoleRepository:
             base_query = base_query.filter(UserRole.applicationId == application_id)
 
         total = base_query.with_entities(func.count(UserRole.id)).scalar() or 0
-        roles = base_query.order_by(UserRole.id.desc()).offset(page * size).limit(size).all()
+        roles = (
+            base_query.order_by(UserRole.id.desc())
+            .offset(page * size)
+            .limit(size)
+            .all()
+        )
         total_pages = math.ceil(total / size) if size > 0 else 1
 
         return roles, total_pages, total
@@ -73,3 +78,30 @@ class UserRoleRepository:
         if application_id is not None:
             query = query.filter(UserRole.applicationId == application_id)
         return query.order_by(UserRole.roleName.asc()).all()
+
+    def get_user_role_of_realm_and_application_and_user_role_id(
+        self, db, realm_id: int, application_id: int, user_role_id: int
+    ):
+        return (
+            db.query(UserRole)
+            .filter(
+                UserRole.realmId == realm_id,
+                UserRole.applicationId == application_id,
+                UserRole.id == user_role_id,
+                UserRole.active == True,
+            )
+            .first()
+        )
+
+    def get_all_user_roles_of_realm_and_application(
+        self, db, realm_id: int, application_id: int
+    ):
+        return (
+            db.query(UserRole)
+            .filter(
+                UserRole.realmId == realm_id,
+                UserRole.applicationId == application_id,
+                UserRole.active == True,
+            )
+            .all()
+        )

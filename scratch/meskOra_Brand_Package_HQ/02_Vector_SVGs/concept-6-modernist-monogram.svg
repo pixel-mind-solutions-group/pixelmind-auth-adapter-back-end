@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <linearGradient id="c6-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284C7"/>
+      <stop offset="50%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1E3A8A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Modernist Minimal Monogram 'mO' -->
+  <!-- Left stem of 'm' -->
+  <rect x="18" y="28" width="12" height="48" rx="6" fill="#2563EB"/>
+  
+  <!-- Bridge and center stem of 'm' -->
+  <path d="M 24 44 C 24 32, 38 32, 38 44 L 38 76" 
+        fill="none" stroke="#2563EB" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Right 'O' Ring seamlessly interlocking -->
+  <circle cx="68" cy="52" r="22" fill="none" stroke="#00D2D3" stroke-width="11"/>
+  <circle cx="68" cy="52" r="7" fill="#2563EB"/>
+</svg>

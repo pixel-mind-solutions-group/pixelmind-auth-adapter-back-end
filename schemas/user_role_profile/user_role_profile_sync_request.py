@@ -13,3 +13,7 @@ class UserRoleProfileSyncRequestDTO(BaseModel):
     applicationId: int = Field(..., description="The ID of the application")
     userRoleId: int = Field(..., description="The ID of the user role")
     modules: List[UserRoleProfileModuleSyncDTO] = Field(..., description="The list of module mappings to sync")
+
+class UserRoleProfilePermissionsSyncRequestDTO(BaseModel):
+    role_name: str = Field(..., description="The ID of the user role")
+    api_permissions_list: List[str] = Field(..., description="The list of module mappings to sync")

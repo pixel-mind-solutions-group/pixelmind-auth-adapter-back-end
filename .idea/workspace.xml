@@ -4,7 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e91fe77f-c78c-4293-b2e7-c1f4736e592e" name="Changes" comment="" />
+    <list default="true" id="e91fe77f-c78c-4293-b2e7-c1f4736e592e" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/clients/impl/keycloak/keycloak_client_impl.py" beforeDir="false" afterPath="$PROJECT_DIR$/clients/impl/keycloak/keycloak_client_impl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/clients/keycloak/keycloak_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/clients/keycloak/keycloak_client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repositories/application/application_repository.py" beforeDir="false" afterPath="$PROJECT_DIR$/repositories/application/application_repository.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repositories/realm/realm_repository.py" beforeDir="false" afterPath="$PROJECT_DIR$/repositories/realm/realm_repository.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repositories/user_role/user_role_repository.py" beforeDir="false" afterPath="$PROJECT_DIR$/repositories/user_role/user_role_repository.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/routers/user_profile/user_profile_router.py" beforeDir="false" afterPath="$PROJECT_DIR$/routers/user_profile/user_profile_router.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/routers/user_role_profile/user_role_profile_router.py" beforeDir="false" afterPath="$PROJECT_DIR$/routers/user_role_profile/user_role_profile_router.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/schemas/user_role_profile/user_role_profile_sync_request.py" beforeDir="false" afterPath="$PROJECT_DIR$/schemas/user_role_profile/user_role_profile_sync_request.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/impl/user_profile/user_profile_service_impl.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/impl/user_profile/user_profile_service_impl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/impl/user_role_profile/user_role_profile_service_impl.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/impl/user_role_profile/user_role_profile_service_impl.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user_profile/user_profile_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/user_profile/user_profile_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user_role_profile/user_role_profile_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/user_role_profile/user_role_profile_service.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

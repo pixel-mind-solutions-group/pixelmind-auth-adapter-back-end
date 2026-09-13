@@ -18,11 +18,15 @@ class UserRoleProfileService(ABC):
         pass
 
     @abstractmethod
-    def delete_api_profile_by_id(self, db: Session, mapping_id: int) -> CommonResponseDTO:
+    def delete_api_profile_by_id(
+        self, db: Session, mapping_id: int
+    ) -> CommonResponseDTO:
         pass
 
     @abstractmethod
-    def delete_ui_profile_by_id(self, db: Session, mapping_id: int) -> CommonResponseDTO:
+    def delete_ui_profile_by_id(
+        self, db: Session, mapping_id: int
+    ) -> CommonResponseDTO:
         pass
 
     @abstractmethod
@@ -39,5 +43,11 @@ class UserRoleProfileService(ABC):
     @abstractmethod
     def sync_profile(
         self, db: Session, req_data: UserRoleProfileSyncRequestDTO
+    ) -> CommonResponseDTO:
+        pass
+
+    @abstractmethod
+    def sync_user_role_api_permissions_of_realm_and_application(
+        self, db: Session, realm_id: int, application_id: int, user_role_id: int
     ) -> CommonResponseDTO:
         pass

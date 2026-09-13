@@ -116,3 +116,28 @@ class KeycloakClient(ABC):
         Retrieves access and refresh tokens from Keycloak via Keycloak adapter backend.
         """
         pass
+
+    @abstractmethod
+    def sync_user_role_api_permissions_of_realm_and_application(
+        self,
+        realm_internal_uuid: str,
+        application_internal_uuid: str,
+        role_wise_permissions: list[dict],
+    ) -> None:
+        """
+        Synchronizes user role API permissions of realm and application in Keycloak via Keycloak adapter backend.
+        """
+        pass
+
+    @abstractmethod
+    def sync_users_by_role_scope(
+        self,
+        realm_name: str,
+        role_scope: str,
+        payload: dict,
+    ) -> dict:
+        """
+        Retrieves all users related to a specific role_scope custom claim in the given realm,
+        and updates their roles or permissions.
+        """
+        pass

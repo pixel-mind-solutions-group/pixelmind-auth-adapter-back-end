@@ -1,4 +1,5 @@
 import logging
+import traceback
 from sqlalchemy import null
 from sqlalchemy.orm import Session
 from fastapi import status
@@ -283,3 +284,46 @@ class UserProfileServiceImpl(UserProfileService):
                 "totalPages": total_pages,
             },
         )
+
+    def sync_users_by_role_scope(
+        self,
+        db: Session,
+        realm_id: int,
+        role_scope: str,
+        payload: dict,
+    ) -> CommonResponseDTO:
+        logger.info(
+            "UserProfileServiceImpl => sync_users_by_role_scope: realm_id=%s, role_scope=%s",
+            realm_id,
+            role_scope,
+        )
+        try:
+            if realm_id is None:
+                raise BadRequestException("Realm ID is required")
+            if not role_scope:
+                raise BadRequestException("Role scope is required")
+
+            realm = db.query(Realm).filter(Realm.id == realm_id).first()
+            if not realm:
+                raise NotFoundException(f"Realm with ID {realm_id} not found")
+
+            # Call Keycloak Client
+            keycloak_response = self.keycloak_client.sync_users_by_role_scope(
+                realm_name=realm.realm,
+                role_scope=role_scope,
+                payload=payload,
+            )
+
+            return CommonResponseDTO(
+                status=status.HTTP_200_OK,
+                message="Users roles/permissions by role scope synchronized successfully",
+                data=keycloak_response,
+            )
+        except Exception as e:
+            logger.error("Error syncing users by role scope: %s", str(e))
+            logger.error(traceback.format_exc())
+            return CommonResponseDTO(
+                success=False,
+                message=f"Keycloak sync by role scope failed: {str(e)}",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

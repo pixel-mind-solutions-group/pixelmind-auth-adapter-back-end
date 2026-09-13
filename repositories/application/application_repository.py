@@ -6,6 +6,12 @@ from models.realms_has_applications.realms_has_applications import RealmsHasAppl
 
 
 class ApplicationRepository:
+    def get_by_id(self, db, application_id: int) -> Optional[RealmsHasApplications]:
+        return (
+            db.query(RealmsHasApplications)
+            .filter(RealmsHasApplications.application_id == application_id)
+            .first()
+        )
 
     def get_all_active_applications(self, db):
         return (
@@ -26,17 +32,19 @@ class ApplicationRepository:
         application_id: int = None,
         active: bool = None,
     ):
-        base_query = db.query(RealmsHasApplications).join(
-            Application, RealmsHasApplications.application_id == Application.id
-        ).join(
-            Realm, RealmsHasApplications.realm_id == Realm.id
+        base_query = (
+            db.query(RealmsHasApplications)
+            .join(Application, RealmsHasApplications.application_id == Application.id)
+            .join(Realm, RealmsHasApplications.realm_id == Realm.id)
         )
 
         if realm_id is not None and realm_id != -1:
             base_query = base_query.filter(RealmsHasApplications.realm_id == realm_id)
 
         if application_id is not None and application_id != -1:
-            base_query = base_query.filter(RealmsHasApplications.application_id == application_id)
+            base_query = base_query.filter(
+                RealmsHasApplications.application_id == application_id
+            )
 
         if active is not None:
             base_query = base_query.filter(RealmsHasApplications.active == active)
@@ -52,9 +60,16 @@ class ApplicationRepository:
                 )
             )
 
-        total = base_query.with_entities(func.count(RealmsHasApplications.id)).scalar() or 0
+        total = (
+            base_query.with_entities(func.count(RealmsHasApplications.id)).scalar() or 0
+        )
 
-        applications = base_query.order_by(RealmsHasApplications.id.desc()).offset(page * size).limit(size).all()
+        applications = (
+            base_query.order_by(RealmsHasApplications.id.desc())
+            .offset(page * size)
+            .limit(size)
+            .all()
+        )
 
         total_pages = math.ceil(total / size) if size > 0 else 1
 

@@ -90,7 +90,9 @@ async def search_assigned_profiles(
         user_role_id,
         module_id,
     )
-    return get_user_role_profile_service().search_assigned_profiles(db, realm_id, application_id, user_role_id, module_id)
+    return get_user_role_profile_service().search_assigned_profiles(
+        db, realm_id, application_id, user_role_id, module_id
+    )
 
 
 @router.post(
@@ -105,3 +107,23 @@ async def sync_profile(
 ) -> CommonResponseDTO:
     logger.info("user_role_profile_router => sync_profile: %s", req)
     return get_user_role_profile_service().sync_profile(db, req)
+
+
+@router.get(
+    "/sync-api-permissions",
+    status_code=status.HTTP_200_OK,
+    summary="Sync api permissions of selected realm and application from Keycloak",
+    description="This endpoint is syncing latest states of user roles api permissions, of selected realm and application from Keycloak",
+)
+async def sync_user_role_api_permissions_of_realm_and_application(
+    db: Session = Depends(get_db),
+    realm_id: int = Query(None, description="Optional realm ID filter"),
+    application_id: int = Query(None, description="Optional application ID filter"),
+    user_role_id: int = Query(None, description="Optional user role ID filter"),
+) -> CommonResponseDTO:
+    logger.info(
+        "user_role_profile_router => sync_user_role_api_permissions_of_realm_and_application function accessed"
+    )
+    return get_user_role_profile_service().sync_user_role_api_permissions_of_realm_and_application(
+        db, realm_id, application_id, user_role_id
+    )

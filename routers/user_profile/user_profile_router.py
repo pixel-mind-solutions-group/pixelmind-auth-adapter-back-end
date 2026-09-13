@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Body, status
 from sqlalchemy.orm import Session
 from schemas.common_response import CommonResponseDTO
 from schemas.user_profile.user_profile_request import UserProfileRequestDTO
@@ -36,7 +36,9 @@ async def register_modify_profile(
     description="Retrieve a single user profile mapping by its ID.",
 )
 async def get_profile_by_id(
-    profile_id: int = Query(..., description="The ID of the user profile mapping to retrieve"),
+    profile_id: int = Query(
+        ..., description="The ID of the user profile mapping to retrieve"
+    ),
     db: Session = Depends(get_db),
 ) -> CommonResponseDTO:
     logger.info("user_profile_router => get_profile_by_id: %s", profile_id)
@@ -51,7 +53,9 @@ async def get_profile_by_id(
     description="Delete a single user profile mapping by its ID.",
 )
 async def delete_profile_by_id(
-    profile_id: int = Query(..., description="The ID of the user profile mapping to delete"),
+    profile_id: int = Query(
+        ..., description="The ID of the user profile mapping to delete"
+    ),
     db: Session = Depends(get_db),
 ) -> CommonResponseDTO:
     logger.info("user_profile_router => delete_profile_by_id: %s", profile_id)
@@ -87,4 +91,29 @@ async def search_profiles(
     )
     return get_user_profile_service().search_profiles(
         db, page, size, realm_id, application_id, user_id, user_role_id, query
+    )
+
+
+@router.post(
+    "/sync-by-role-scope",
+    response_model=CommonResponseDTO,
+    status_code=status.HTTP_200_OK,
+    summary="Sync users by role scope claim in Keycloak",
+    description="Syncs user roles/permissions in Keycloak for all users matching the role_scope custom claim value.",
+)
+async def sync_users_by_role_scope(
+    realm_id: int = Query(..., description="The Realm ID"),
+    role_scope: str = Query(
+        ..., description="The custom claim role_scope value to search for"
+    ),
+    payload: dict = Body(..., description="The roles or permissions update payload"),
+    db: Session = Depends(get_db),
+) -> CommonResponseDTO:
+    logger.info(
+        "user_profile_router => sync_users_by_role_scope: realm_id=%s, role_scope=%s",
+        realm_id,
+        role_scope,
+    )
+    return get_user_profile_service().sync_users_by_role_scope(
+        db, realm_id, role_scope, payload
     )
