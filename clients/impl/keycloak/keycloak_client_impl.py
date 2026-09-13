@@ -391,6 +391,25 @@ class KeycloakClientImpl(KeycloakClient):
         except KeycloakIntegrationException:
             raise
         except urllib.error.HTTPError as e:
+            try:
+                res_body = json.loads(e.read().decode("utf-8"))
+                msg = (
+                    res_body.get("errorDescription")
+                    or res_body.get("message")
+                    or res_body.get("error")
+                    or str(e)
+                )
+            except Exception:
+                msg = str(e)
+
+            if not permissions and (
+                e.code == 404 or "404" in str(msg) or "not found" in str(msg).lower()
+            ):
+                logger.warning(
+                    f"User {username} or client {client_id} not found in Keycloak realm {realm_name} during permission cleanup ({msg}). Skipping."
+                )
+                return
+
             self._handle_http_error(
                 e, "calling Keycloak adapter to assign user permissions"
             )
@@ -441,6 +460,23 @@ class KeycloakClientImpl(KeycloakClient):
         except KeycloakIntegrationException:
             raise
         except urllib.error.HTTPError as e:
+            try:
+                res_body = json.loads(e.read().decode("utf-8"))
+                msg = (
+                    res_body.get("errorDescription")
+                    or res_body.get("message")
+                    or res_body.get("error")
+                    or str(e)
+                )
+            except Exception:
+                msg = str(e)
+
+            if e.code == 404 or "404" in str(msg) or "not found" in str(msg).lower():
+                logger.warning(
+                    f"User {username} not found in Keycloak realm {realm_name} during delete ({msg}). Considering delete successful."
+                )
+                return
+
             self._handle_http_error(e, "calling Keycloak adapter to delete user")
         except Exception as e:
             logger.error("Error calling Keycloak adapter to delete user: %s", e)

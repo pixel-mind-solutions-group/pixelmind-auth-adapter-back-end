@@ -216,22 +216,53 @@ class UserProfileServiceImpl(UserProfileService):
                 f"User Profile mapping with ID {profile_id} not found"
             )
 
-        # Keycloak User deletion
+        # Keycloak User / Permission cleanup
         try:
             if entity.user and entity.realm:
-                self.keycloak_client.delete_user(
-                    realm_name=entity.realm.realm,
-                    username=entity.user.username,
+                other_profiles_count = (
+                    db.query(UserProfile)
+                    .filter(
+                        UserProfile.userId == entity.userId,
+                        UserProfile.realmId == entity.realmId,
+                        UserProfile.id != entity.id,
+                    )
+                    .count()
                 )
+                if other_profiles_count == 0:
+                    self.keycloak_client.delete_user(
+                        realm_name=entity.realm.realm,
+                        username=entity.user.username,
+                    )
+                else:
+                    logger.info(
+                        "User %s has %d other profile(s) in realm %s. Unassigning application permissions instead of deleting user.",
+                        entity.user.username,
+                        other_profiles_count,
+                        entity.realm.realm,
+                    )
+                    if entity.application and entity.application.clientId:
+                        self.keycloak_client.assign_user_permissions(
+                            realm_name=entity.realm.realm,
+                            username=entity.user.username,
+                            client_id=entity.application.clientId,
+                            permissions=[],
+                        )
         except AppException as e:
-            raise
+            err_msg = str(getattr(e, "message", e))
+            if "404" in err_msg or "not found" in err_msg.lower():
+                logger.warning(
+                    "User or client not found in Keycloak (%s). Proceeding with local profile deletion.",
+                    err_msg,
+                )
+            else:
+                raise
         except Exception as e:
             logger.error(
-                "Failed to delete Keycloak user during user profile delete: %s",
+                "Failed to cleanup Keycloak user/permissions during user profile delete: %s",
                 e,
             )
             raise KeycloakIntegrationException(
-                f"Keycloak user deletion failed: {str(e)}"
+                f"Keycloak cleanup failed: {str(e)}"
             )
 
         self.repository.delete(db, entity)
