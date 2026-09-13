@@ -141,3 +141,21 @@ class KeycloakClient(ABC):
         and updates their roles or permissions.
         """
         pass
+
+    @abstractmethod
+    def verify_token(self, token: str) -> dict:
+        """
+        Verifies an access token through Keycloak (e.g. via OIDC UserInfo endpoint)
+        and returns verified user claims and token metadata.
+
+        Args:
+            token (str): The raw access token from the Authorization header.
+
+        Returns:
+            dict: Verified claims including preferred_username, sub, realm, azp, etc.
+
+        Raises:
+            UnauthorizedException: If the token is invalid, expired, or rejected by Keycloak.
+            KeycloakIntegrationException: If Keycloak is unreachable.
+        """
+        pass

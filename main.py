@@ -66,3 +66,4 @@ register_cors(app)
 @app.get("/")
 def home():
     return {"message": "Pixel Auth Adapter Application Running Successfully"}
+

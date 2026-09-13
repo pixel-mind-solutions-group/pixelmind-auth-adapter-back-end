@@ -21,3 +21,14 @@ class BadRequestException(AppException):
 class KeycloakIntegrationException(AppException):
     def __init__(self, message: str = "Keycloak adapter service unavailable"):
         super().__init__(status.HTTP_502_BAD_GATEWAY, message)
+
+
+class UnauthorizedException(AppException):
+    def __init__(self, message: str = "Unauthorized"):
+        super().__init__(status.HTTP_401_UNAUTHORIZED, message)
+
+
+class ForbiddenException(AppException):
+    def __init__(self, message: str = "Forbidden"):
+        super().__init__(status.HTTP_403_FORBIDDEN, message)
+

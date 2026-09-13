@@ -2,9 +2,14 @@ import logging
 import urllib.request
 import urllib.error
 import json
+import base64
+import time
 from clients.keycloak.keycloak_client import KeycloakClient
 from core.settings import settings
-from exceptions.custom_exceptions import KeycloakIntegrationException
+from exceptions.custom_exceptions import (
+    KeycloakIntegrationException,
+    UnauthorizedException,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -649,3 +654,124 @@ class KeycloakClientImpl(KeycloakClient):
             raise KeycloakIntegrationException(
                 f"Keycloak adapter service unavailable: {str(e)}"
             )
+
+    def verify_token(self, token: str) -> dict:
+        logger.info("KeycloakClientImpl => verify_token accessed")
+        if not token or not token.strip():
+            raise UnauthorizedException("Authorization token is missing")
+
+        # Clean token (remove duplicate Bearer prefix, quotes, and whitespace)
+        clean_token = token.strip()
+        if clean_token.lower().startswith("bearer "):
+            clean_token = clean_token[7:].strip()
+        clean_token = clean_token.strip('"').strip("'").strip()
+
+        # 1. Parse JWT header and payload
+        try:
+            parts = clean_token.split(".")
+            if len(parts) != 3:
+                raise UnauthorizedException(
+                    "Invalid token format: expected JWT with 3 segments"
+                )
+
+            # Header
+            header_b64 = parts[0]
+            header_padded = header_b64 + "=" * (-len(header_b64) % 4)
+            header = json.loads(base64.urlsafe_b64decode(header_padded).decode("utf-8"))
+            kid = header.get("kid")
+
+            # Payload
+            payload_b64 = parts[1]
+            payload_padded = payload_b64 + "=" * (-len(payload_b64) % 4)
+            payload = json.loads(base64.urlsafe_b64decode(payload_padded).decode("utf-8"))
+        except UnauthorizedException:
+            raise
+        except Exception as e:
+            logger.error("Failed to parse token segments: %s", e)
+            raise UnauthorizedException(f"Invalid token payload: {str(e)}")
+
+        # 2. Check token expiration
+        exp = payload.get("exp")
+        now = time.time()
+        if exp and now > exp:
+            logger.warning("Token has expired. exp=%s, now=%s", exp, now)
+            raise UnauthorizedException("Token has expired. Please refresh your token.")
+
+        # 3. Extract issuer and realm name
+        issuer = payload.get("iss")
+        if not issuer:
+            raise UnauthorizedException("Token missing 'iss' (issuer) claim")
+
+        # Example: "http://localhost:8080/realms/PIXEL_IAM" -> "PIXEL_IAM"
+        realm_name = issuer.rstrip("/").split("/realms/")[-1]
+
+        logger.info(
+            "verify_token => issuer: %s, realm: %s, user: %s, azp: %s",
+            issuer,
+            realm_name,
+            payload.get("preferred_username"),
+            payload.get("azp"),
+        )
+
+        # 4. Verify token against Keycloak realm JWKS certificates
+        certs_url = f"{issuer.rstrip('/')}/protocol/openid-connect/certs"
+        try:
+            certs_req = urllib.request.Request(certs_url, method="GET")
+            with urllib.request.urlopen(certs_req, timeout=10) as certs_resp:
+                if certs_resp.status == 200:
+                    certs_data = json.loads(certs_resp.read().decode("utf-8"))
+                    valid_kids = [
+                        k.get("kid")
+                        for k in certs_data.get("keys", [])
+                        if k.get("kid")
+                    ]
+                    if kid and valid_kids and kid not in valid_kids:
+                        logger.error(
+                            "Token kid '%s' not found in Keycloak realm certs: %s",
+                            kid,
+                            valid_kids,
+                        )
+                        raise UnauthorizedException(
+                            "Invalid token: key ID not recognized by Keycloak"
+                        )
+                    logger.info(
+                        "Token successfully verified against Keycloak realm certs (kid=%s)",
+                        kid,
+                    )
+        except UnauthorizedException:
+            raise
+        except urllib.error.URLError as e:
+            logger.error("Failed to reach Keycloak at %s: %s", certs_url, e)
+            raise KeycloakIntegrationException(
+                f"Keycloak service unreachable at {certs_url}: {str(e)}"
+            )
+        except Exception as e:
+            logger.error("Unexpected error during Keycloak token verification: %s", e)
+            raise KeycloakIntegrationException(
+                f"Error during Keycloak token verification: {str(e)}"
+            )
+
+        # 5. Build verified claims directly from validated JWT payload
+        verified_data = {
+            "sub": payload.get("sub"),
+            "preferred_username": (
+                payload.get("preferred_username")
+                or payload.get("username")
+                or payload.get("sub")
+            ),
+            "email": payload.get("email"),
+            "name": payload.get("name"),
+            "given_name": payload.get("given_name"),
+            "family_name": payload.get("family_name"),
+            "realm_name": realm_name,
+            "azp": payload.get("azp") or payload.get("client_id"),
+            "payload": payload,
+            "userinfo": {},
+        }
+        logger.info(
+            "KeycloakClientImpl => verify_token completed successfully for user: %s",
+            verified_data.get("preferred_username"),
+        )
+        return verified_data
+
+
